@@ -1,12 +1,19 @@
 # Copilot Instructions
 
-Follow all coding standards defined in CODING_STANDARDS.md for this Nuxt 3 project.
+Follow `CODING_STANDARDS.md` as the source of truth for this Nuxt 4 project.
 
-## Critical Standards
+## Critical Rules
 
-### Component Structure
+### Project Context
 
-Always follow this order in `<script setup>`:
+- Nuxt 4 with SSR enabled
+- TypeScript strict mode
+- Tailwind CSS for styling
+- Nitro server routes and Supabase integration points are present
+
+### Component `<script setup>` Order
+
+Always keep this order:
 
 1. Imports
 2. Props & Emits
@@ -19,61 +26,48 @@ Always follow this order in `<script setup>`:
 
 ### TypeScript
 
-- Use TypeScript with strict typing for all files
-- Define props with `defineProps<Props>()` interface
+- Use strict typing
+- Use `defineProps<Props>()` with interfaces
 - Use `withDefaults` for optional props
-- Avoid `any` - use `unknown` when type is uncertain
+- Avoid `any`; use `unknown` where type is uncertain
 
-### Vue 3 Patterns
+### Vue 3 / Pinia
 
 - Use Composition API with `<script setup lang="ts">`
-- Use `ref` for primitives and objects (better TS support)
-- Destructure stores with `storeToRefs` for reactivity
+- Prefer `ref` for reliable TS inference
+- Use `storeToRefs` when destructuring store state/getters
+- Keep store shape as `state -> getters -> actions`
 
-### Pinia Stores
+### Tailwind
 
-- One store per domain (user, cart, products)
-- Structure: state → getters → actions
-- Type everything with interfaces
+- Mobile-first responsive classes
+- Breakpoints: `sm`, `md`, `lg`, `xl`, `2xl`
+- Prefer utility classes; avoid custom CSS unless necessary
+- Keep class order consistent: Layout → Box Model → Typography → Visual → Misc
 
-### Tailwind CSS
+### Naming
 
-- Mobile-first responsive design
-- Breakpoints: sm(640) md(768) lg(1024) xl(1280) 2xl(1536)
-- Use utility classes in template, avoid custom CSS unless necessary
-- Class order: Layout → Box Model → Typography → Visual → Misc
-- **Theme colors**: Use `primary`, `secondary`, `success`, `warning`, `error` from theme
-- **Fonts**: Use `font-body`, `font-display` as defined in theme
-- **Border radius**: Use semantic values like `rounded-button`, `rounded-card`, `rounded-input`
-- Always use theme values instead of arbitrary colors/sizes
-
-### Naming Conventions
-
-- Components: PascalCase (`UserProfile.vue`)
-- Composables: camelCase with `use` prefix (`useAuth.ts`)
-- Stores: camelCase with Store suffix (`userStore.ts`)
-- Pages: kebab-case (`user-profile.vue`)
+- Components: PascalCase
+- Composables: `useXxx`
+- Stores: `xxxStore`
+- Pages: kebab-case
 - Constants: UPPER_SNAKE_CASE
 
-### Accessibility (WCAG 2.1 AA)
+### Accessibility
 
-**All code must be accessible:**
+- Use semantic HTML
+- Preserve heading hierarchy
+- Ensure keyboard accessibility and visible focus states
+- Avoid hover-only behavior
+- Provide labels/ARIA metadata where needed
 
-- Use semantic HTML5 elements (`<header>`, `<nav>`, `<main>`, `<article>`, `<section>`, `<footer>`)
-- Proper heading hierarchy (h1-h6, no skipping levels, only one h1 per page)
-- All images must have descriptive `alt` text (empty `alt=""` for decorative)
-- All interactive elements keyboard accessible (Tab, Enter, Escape, Arrow keys)
-- Visible focus indicators on all interactive elements
-- **No hover-dependent functionality** - provide click/tap alternatives for all hover interactions
-- ARIA attributes when needed: `aria-label`, `aria-labelledby`, `aria-describedby`, `aria-live`
-- Forms: every input has `<label>`, use `aria-invalid` and `aria-describedby` for errors
-- Color contrast: 4.5:1 for normal text, 3:1 for large text/UI components
-- Links: descriptive text (avoid "click here"), use `<a>` for navigation, `<button>` for actions
-- Minimum touch target: 44x44px
-- Screen reader text: use `.sr-only` class for important context
-- Test with keyboard navigation and screen readers
+### Validation
+
+Use existing scripts before finalizing:
+
+- `npm run lint`
+- `npm run build`
 
 ### Git Workflow
 
-- Branch naming: `123-feature-name` (use issue numbers)
-- Commits: `feat:`, `fix:`, `refactor:`, `docs:`, `style:`, `test:`, `chore:`
+Use branch naming and conventional commit prefixes defined in `CODING_STANDARDS.md`.
