@@ -6,6 +6,8 @@ on:
 jobs:
   lint-and-security-audit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       # 1. Clone the repo into the GitHub Actions runner
@@ -19,5 +21,5 @@ jobs:
       # 3. Install dependencies exactly as in lockfile
       - run: npm ci
 
-      # 4. Run linter (Next.js has next lint built-in)
+      # 4. Run linter
       - run: npm run lint
