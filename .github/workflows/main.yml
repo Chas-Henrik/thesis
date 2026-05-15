@@ -1,10 +1,10 @@
 name: CI
 
 on:
-  push: # triggers lint-and-security-audit on all branches
+  push: # triggers lint-audit on all branches
 
 jobs:
-  lint-and-security-audit:
+  lint-audit:
     runs-on: ubuntu-latest
     permissions:
       contents: read
