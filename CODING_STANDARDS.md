@@ -63,15 +63,19 @@ server/utils/
 
 - Use Composition API with `<script setup lang="ts">`.
 - Prefer `ref` for both primitives and objects for consistent typing.
-- Keep component `<script setup>` sections ordered as:
-  1. Imports
-  2. Props & Emits
-  3. Composables & Stores
-  4. State (`ref` / `reactive`)
-  5. Computed
-  6. Methods
-  7. Lifecycle hooks
-  8. Watchers
+
+### Component Structure
+
+Always follow this order in `<script setup>`:
+
+1. Imports
+2. Props & Emits
+3. Composables & Stores
+4. State (ref/reactive)
+5. Computed
+6. Methods
+7. Lifecycle hooks
+8. Watchers
 
 ## Pinia Store Standards
 
@@ -136,8 +140,10 @@ CI runs lint using `.github/workflows/main.yml` (`lint-audit` job).
 
 ## Git Workflow
 
-- Branch naming: `123-feature-name`
-- Conventional commit prefixes:
+- Branch naming:
+  - If creating locally: `123-feature-name`
+  - If creating directly in GitHub UI: use a clear, descriptive kebab-case name
+- Conventional commit prefixes are recommended when writing commits manually:
   - `feat:`
   - `fix:`
   - `refactor:`

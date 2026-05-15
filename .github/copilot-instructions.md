@@ -11,7 +11,7 @@ Follow `CODING_STANDARDS.md` as the source of truth for this Nuxt 4 project.
 - Tailwind CSS for styling
 - Nitro server routes and Supabase integration points are present
 
-### Component `<script setup>` Order
+### Component Structure
 
 Always keep this order:
 
@@ -70,4 +70,4 @@ Use existing scripts before finalizing:
 
 ### Git Workflow
 
-Use branch naming and conventional commit prefixes defined in `CODING_STANDARDS.md`.
+Use branch naming guidance from `CODING_STANDARDS.md`. Prefer conventional commit prefixes for manual commits.
