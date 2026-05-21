@@ -15,8 +15,8 @@ export default defineEventHandler(async (event): Promise<JobImportData> => {
     // For now, returning empty object - update with your actual implementation
 
     const data: JobImportData = {
-      fromDate: '',
-      toDate: '',
+      fromDate: '2026-05-10',
+      toDate: '2026-05-20',
     }
 
     return data

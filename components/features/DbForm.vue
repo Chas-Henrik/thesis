@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useDBForm } from '~/composables/useDbForm'
+import Spinner from '../common/Spinner.vue'
 
 // Composables
 const { fromDate, toDate, loading, error, success, submitting, submitForm } = useDBForm()
@@ -73,11 +74,11 @@ const handleSubmit = async (): Promise<void> => {
       class="w-full rounded-md bg-slate-950 px-4 py-2 font-medium text-white transition-opacity focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800"
     >
       <span v-if="!submitting">Import DB</span>
-      <span v-else>Importing...</span>
+      <span v-else class="flex items-center justify-center gap-3"><Spinner class="w-4 h-4" /> Importing...</span>
     </button>
 
     <!-- Loading State -->
-    <p v-if="loading" class="mt-2 text-xs text-slate-500">Loading initial dates...</p>
+    <span v-if="loading" class="mt-2 text-xs text-slate-500 flex items-center gap-3"><Spinner class="w-3 h-3" /> Loading initial dates...</span>
 
     <!-- Error Message -->
     <div

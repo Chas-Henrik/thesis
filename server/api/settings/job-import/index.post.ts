@@ -48,6 +48,8 @@ export default defineEventHandler(async (event): Promise<JobImportResponse> => {
     // update settings table with new dates - implement your actual storage logic here
     // Example: await saveJobImportDates(body.fromDate, body.toDate)
 
+    // Simulate import delay
+    await new Promise(resolve => setTimeout(resolve, 3000))
 
     // Call the import service
     const result = await importDatabaseForDateRange(body.fromDate, body.toDate)
