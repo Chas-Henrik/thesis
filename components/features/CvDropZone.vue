@@ -14,6 +14,8 @@ const emit = defineEmits<{
 
 // State
 const isDragOver = ref(false)
+const isParsing = ref(false)
+const isSuccess = ref(false)
 const errorMessage = ref<string | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
@@ -29,18 +31,36 @@ function handleFileInput(event: Event) {
   setFile(file)
 }
 
-function setFile(file: File | null) {
+async function setFile(file: File | null) {
   errorMessage.value = null
   if (!file) return
   if (file.type !== 'application/pdf') {
     errorMessage.value = 'Only PDF files are accepted.'
     return
   }
+
   emit('update:modelValue', file)
+  isParsing.value = true
+  isSuccess.value = false
+
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    await $fetch('/api/cv/parse', { method: 'POST', body: formData })
+    isSuccess.value = true
+  }
+  catch (error) {
+    const fetchError = error as { statusMessage?: string }
+    errorMessage.value = fetchError.statusMessage ?? 'Failed to extract text from PDF.'
+  }
+  finally {
+    isParsing.value = false
+  }
 }
 
 function removeFile() {
   emit('update:modelValue', null)
+  isSuccess.value = false
   errorMessage.value = null
   if (fileInputRef.value) fileInputRef.value.value = ''
 }
@@ -52,12 +72,11 @@ function openFilePicker() {
 
 <template>
   <div class="w-full">
-    <!-- Drop zone -->
+    <!-- Drop zone (always visible) -->
     <div
-      v-if="!props.modelValue"
       role="button"
       tabindex="0"
-      :aria-label="isDragOver ? 'Release to upload PDF' : 'Drop your CV here or click to browse'"
+      :aria-label="isDragOver ? 'Release to upload PDF' : props.modelValue ? 'Drop to replace CV' : 'Drop your CV here or click to browse'"
       class="flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-12 transition-colors"
       :class="isDragOver
         ? 'border-slate-500 bg-slate-50'
@@ -81,7 +100,8 @@ function openFilePicker() {
       </svg>
       <div>
         <p class="text-sm font-medium text-slate-700">
-          Drop your CV here or <span class="text-slate-900 underline">browse</span>
+          <template v-if="props.modelValue">Drop to replace or <span class="text-slate-900 underline">browse</span></template>
+          <template v-else>Drop your CV here or <span class="text-slate-900 underline">browse</span></template>
         </p>
         <p class="mt-1 text-xs text-slate-400">PDF only</p>
       </div>
@@ -89,8 +109,8 @@ function openFilePicker() {
 
     <!-- Selected file -->
     <div
-      v-else
-      class="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+      v-if="props.modelValue"
+      class="mt-3 flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
     >
       <div class="flex items-center gap-3 overflow-hidden">
         <svg
@@ -104,6 +124,8 @@ function openFilePicker() {
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
         <span class="truncate text-sm text-slate-700">{{ props.modelValue.name }}</span>
+        <span v-if="isParsing" class="shrink-0 text-xs text-slate-400">Extracting text…</span>
+        <span v-else-if="isSuccess" class="shrink-0 text-xs text-green-600">Text extracted</span>
       </div>
       <button
         type="button"
