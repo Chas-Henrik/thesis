@@ -3,6 +3,8 @@
  * Retrieve the current job import date range from storage/database
  */
 
+import { getPrisma } from '~/server/utils/prisma'
+
 interface JobImportData {
   fromDate?: string
   toDate?: string
@@ -10,16 +12,21 @@ interface JobImportData {
 
 export default defineEventHandler(async (event): Promise<JobImportData> => {
   try {
-    // TODO: Implement actual storage retrieval
-    // Example: const data = await readJobImportDates() from your DB/storage
-    // For now, returning empty object - update with your actual implementation
+    const prisma = getPrisma()
+    
+    // Fetch job import settings from database
+    const settings = await prisma.settings.findUnique({
+      where: { id: 1n },
+      select: {
+        from_date: true,
+        to_date: true,
+      },
+    })
 
-    const data: JobImportData = {
-      fromDate: '2026-05-10',
-      toDate: '2026-05-20',
+    return {
+      fromDate: settings?.from_date || undefined,
+      toDate: settings?.to_date || undefined,
     }
-
-    return data
   } catch (error) {
     console.error('[job-import GET]', error)
     throw createError({

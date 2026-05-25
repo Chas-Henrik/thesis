@@ -4,6 +4,7 @@
  */
 
 import { importDatabaseForDateRange } from '~/server/services/jobImport'
+import { getPrisma } from '~/server/utils/prisma'
 
 interface JobImportRequest {
   fromDate: string
@@ -45,14 +46,34 @@ export default defineEventHandler(async (event): Promise<JobImportResponse> => {
     }
 
     console.log('[job-import POST] Received request with dates:', body.fromDate, body.toDate)
-    // update settings table with new dates - implement your actual storage logic here
-    // Example: await saveJobImportDates(body.fromDate, body.toDate)
-
-    // Simulate import delay
-    await new Promise(resolve => setTimeout(resolve, 3000))
-
-    // Call the import service
-    const result = await importDatabaseForDateRange(body.fromDate, body.toDate)
+    
+    // Update settings and import in a transaction (so both succeed or fail together)
+    const prisma = getPrisma()
+    const result = await prisma.$transaction(async (tx) => {
+      const existing = await tx.settings.findUnique({
+        where: { id: 1n },
+      })
+      
+      if (existing) {
+        await tx.settings.update({
+          where: { id: 1n },
+          data: {
+            from_date: body.fromDate,
+            to_date: body.toDate,
+          },
+        })
+      } else {
+        await tx.settings.create({
+          data: {
+            from_date: body.fromDate,
+            to_date: body.toDate,
+          },
+        })
+      }
+      
+      // Call the import service
+      return await importDatabaseForDateRange(body.fromDate, body.toDate)
+    })
 
     return {
       success: result.success,

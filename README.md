@@ -20,6 +20,24 @@ yarn install
 bun install
 ```
 
+## Database
+
+Set up your Prisma database schema:
+
+```bash
+# Optional: Pull existing schema from Supabase
+npx prisma db pull
+
+# Generate Prisma Client
+npx prisma generate
+
+# For the first setup or when resetting the test database:
+npx prisma migrate reset --force
+
+# For schema changes (this will drop and recreate the database):
+npx prisma migrate reset --force
+```
+
 ## Development Server
 
 Start the development server on `http://localhost:3000`:
