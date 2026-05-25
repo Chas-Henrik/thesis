@@ -22,11 +22,16 @@ const handleFilterUpdate = (newValues: typeof filterValues.value): void => {
   console.log('Employment Type:', newValues.employmentType)
   console.log('Working Hours:', newValues.workingHours)
 }
+import CvDropZone from '~/components/features/CvDropZone.vue'
+
+const cvFile = ref<File | null>(null)
 </script>
 
 <template>
   <main class="min-h-screen bg-white text-slate-950">
-    <div class="mx-auto flex min-h-screen w-full max-w-4xl flex-col items-center justify-center px-6 py-16 text-center">
+    <div class="mx-auto grid min-h-screen w-full max-w-6xl grid-cols-3 items-center gap-8 px-6 py-16">
+      <CvDropZone v-model="cvFile" />
+      <div />
       <DBForm />
       <div class="mt-12 w-full">
         <FilterMenu
