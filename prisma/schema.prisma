@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model settings {
+  key       String  @id @default("global")
+  from_date String
+  to_date   String
+}
+
+model jobs {
+  id                                     BigInt   @id @default(autoincrement())
+  title                                  String
+  location                               String?
+  date                                   String?
+  description                            String
+  job_link                               String?
+  employer_name                          String?
+  employment_type                        String?
+  working_hours_type                     String?
+  af_job_id                              String   @unique
+  raw_description_embedding              Unsupported("vector")?
+  extracted_experiences_skills_embedding Unsupported("vector")?
+}
