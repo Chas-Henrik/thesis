@@ -24,7 +24,7 @@ async function handleSubmit() {
     formData.append('cvSearchOption', cvSearchOption.value)
     formData.append('adSearchOption', adSearchOption.value)
 
-    await $fetch('/api/cv/parse', {
+    await $fetch('/api/search/semantic', {
       method: 'POST',
       body: formData,
     })
