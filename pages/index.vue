@@ -30,7 +30,7 @@ const handleFilterUpdate = (newValues: typeof filterValues.value): void => {
 
 <template>
   <main class="min-h-screen bg-white text-slate-950">
-    <div class="mx-auto grid min-h-screen w-full max-w-6xl grid-cols-3 items-center gap-8 px-6 py-16">
+    <div class="mx-auto grid min-h-screen w-full grid-cols-3 items-center gap-8 px-6 py-16">
       <div class="w-full">      
         <CvAnalysisForm @result="searchResult = $event" />
         <FilterMenu
