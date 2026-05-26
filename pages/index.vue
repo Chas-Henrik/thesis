@@ -9,6 +9,8 @@ const employmentTypes = ['Permanent Position', 'Fixed-term Contract', 'Temporary
 const workingHoursTypes = ['Full-time (40h)', 'Part-time (20-30h)', 'Hourly Employment']
 
 // State
+const searchResult = ref<unknown>(null)
+
 const filterValues = ref({
   location: '',
   employmentType: '',
@@ -29,10 +31,8 @@ const handleFilterUpdate = (newValues: typeof filterValues.value): void => {
 <template>
   <main class="min-h-screen bg-white text-slate-950">
     <div class="mx-auto grid min-h-screen w-full max-w-6xl grid-cols-3 items-center gap-8 px-6 py-16">
-      <CvAnalysisForm />
-      <div />
-      <DBForm />
-      <div class="mt-12 w-full">
+      <div class="w-full">      
+        <CvAnalysisForm @result="searchResult = $event" />
         <FilterMenu
           :model-value="filterValues"
           :locations="locations"
@@ -41,6 +41,9 @@ const handleFilterUpdate = (newValues: typeof filterValues.value): void => {
           @update:model-value="handleFilterUpdate"
         />
       </div>
+      <div />
+      <DBForm />
+
     </div>
   </main>
 </template>
