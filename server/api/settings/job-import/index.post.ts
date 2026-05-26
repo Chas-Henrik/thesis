@@ -50,20 +50,21 @@ export default defineEventHandler(async (event): Promise<JobImportResponse> => {
     // Update settings and import in a transaction (so both succeed or fail together)
     const prisma = getPrisma()
     const result = await prisma.$transaction(async (tx) => {
-      const existing = await tx.settings.findUnique({
-        where: { id: 1n },
-      })
+      // Find the first (and should be only) settings record
+      let settings = await tx.settings.findFirst()
       
-      if (existing) {
-        await tx.settings.update({
-          where: { id: 1n },
+      // If no settings exist, create one
+      if (!settings) {
+        settings = await tx.settings.create({
           data: {
             from_date: body.fromDate,
             to_date: body.toDate,
           },
         })
       } else {
-        await tx.settings.create({
+        // Update existing settings
+        settings = await tx.settings.update({
+          where: { id: settings.id },
           data: {
             from_date: body.fromDate,
             to_date: body.toDate,

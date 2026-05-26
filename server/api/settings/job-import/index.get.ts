@@ -15,8 +15,7 @@ export default defineEventHandler(async (event): Promise<JobImportData> => {
     const prisma = getPrisma()
     
     // Fetch job import settings from database
-    const settings = await prisma.settings.findUnique({
-      where: { id: 1n },
+    const settings = await prisma.settings.findFirst({
       select: {
         from_date: true,
         to_date: true,
