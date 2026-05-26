@@ -49,32 +49,37 @@ export default defineEventHandler(async (event): Promise<JobImportResponse> => {
     
     // Update settings and import in a transaction (so both succeed or fail together)
     const prisma = getPrisma()
-    const result = await prisma.$transaction(async (tx) => {
-      // Find the first (and should be only) settings record
-      let settings = await tx.settings.findFirst()
-      
-      // If no settings exist, create one
-      if (!settings) {
-        settings = await tx.settings.create({
-          data: {
-            from_date: body.fromDate,
-            to_date: body.toDate,
-          },
-        })
-      } else {
-        // Update existing settings
-        settings = await tx.settings.update({
-          where: { id: settings.id },
-          data: {
-            from_date: body.fromDate,
-            to_date: body.toDate,
-          },
-        })
+    const result = await prisma.$transaction(
+      async (tx) => {
+        // Find the first (and should be only) settings record
+        let settings = await tx.settings.findFirst()
+        
+        // If no settings exist, create one
+        if (!settings) {
+          settings = await tx.settings.create({
+            data: {
+              from_date: body.fromDate,
+              to_date: body.toDate,
+            },
+          })
+        } else {
+          // Update existing settings
+          settings = await tx.settings.update({
+            where: { id: settings.id },
+            data: {
+              from_date: body.fromDate,
+              to_date: body.toDate,
+            },
+          })
+        }
+        
+        // Call the import service
+        return await importDatabaseForDateRange(body.fromDate, body.toDate)
+      },
+      {
+        timeout: 30000, // 30 seconds
       }
-      
-      // Call the import service
-      return await importDatabaseForDateRange(body.fromDate, body.toDate)
-    })
+    )
 
     return {
       success: result.success,
