@@ -6,7 +6,7 @@ interface Props {
   modelValue?: {
     location: string
     employmentType: string
-    workingHoursType: string
+    workingHours: string
   }
   locations?: string[]
   employmentTypes?: string[]
@@ -17,7 +17,7 @@ const props = withDefaults(defineProps<Props>(), {
   modelValue: () => ({
     location: '',
     employmentType: '',
-    workingHoursType: '',
+    workingHours: '',
   }),
   locations: () => [],
   employmentTypes: () => [],
@@ -31,7 +31,7 @@ const emit = defineEmits<{
 // State
 const selectedLocation = ref(props.modelValue.location)
 const selectedEmploymentType = ref(props.modelValue.employmentType)
-const selectedWorkingHoursType = ref(props.modelValue.workingHoursType)
+const selectedWorkingHours = ref(props.modelValue.workingHours)
 
 // Template refs for dropdowns
 const locationDropdown = ref<InstanceType<typeof BaseDropDown> | null>(null)
@@ -41,7 +41,7 @@ const workingHoursDropdown = ref<InstanceType<typeof BaseDropDown> | null>(null)
 // Computed labels
 const locationLabel = computed(() => selectedLocation.value || 'Location (City)')
 const employmentTypeLabel = computed(() => selectedEmploymentType.value || 'Employment Type')
-const workingHoursLabel = computed(() => selectedWorkingHoursType.value || 'Working Hours Type')
+const workingHoursLabel = computed(() => selectedWorkingHours.value || 'Working Hours')
 
 // Methods
 const handleLocationSelect = (location: string): void => {
@@ -56,8 +56,8 @@ const handleEmploymentTypeSelect = (type: string): void => {
   employmentTypeDropdown.value?.closeDropdown()
 }
 
-const handleWorkingHoursTypeSelect = (hours: string): void => {
-  selectedWorkingHoursType.value = hours
+const handleWorkingHoursSelect = (hours: string): void => {
+  selectedWorkingHours.value = hours
   emitUpdate()
   workingHoursDropdown.value?.closeDropdown()
 }
@@ -66,7 +66,7 @@ const emitUpdate = (): void => {
   emit('update:modelValue', {
     location: selectedLocation.value,
     employmentType: selectedEmploymentType.value,
-    workingHoursType: selectedWorkingHoursType.value,
+    workingHours: selectedWorkingHours.value,
   })
 }
 </script>
@@ -128,7 +128,7 @@ const emitUpdate = (): void => {
             type="button"
             class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors duration-150"
             :aria-label="`Filter by working hours: ${hours}`"
-            @click="handleWorkingHoursTypeSelect(hours)"
+            @click="handleWorkingHoursSelect(hours)"
           >
             {{ hours }}
           </button>

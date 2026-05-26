@@ -4,14 +4,14 @@ import DBForm from '~/components/features/DbForm.vue'
 import FilterMenu from '~/components/features/FilterMenu.vue'
 
 const locations = ['Stockholm', 'Gothenburg', 'Malmö', 'Uppsala', 'Västerås']
-const employmentTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship']
-const workingHoursTypes = ['Full-time (40h)', 'Part-time (20-30h)', 'Flexible', 'Remote']
+const employmentTypes = ['Permanent Position', 'Fixed-term Contract', 'Temporary Assignment', 'On-call or Temporary Position', 'Summer Job', 'Internship']
+const workingHoursTypes = ['Full-time (40h)', 'Part-time (20-30h)', 'Hourly Employment']
 
 // State
 const filterValues = ref({
   location: '',
   employmentType: '',
-  workingHoursType: '',
+  workingHours: '',
 })
 
 // Methods
@@ -20,7 +20,7 @@ const handleFilterUpdate = (newValues: typeof filterValues.value): void => {
   console.log('Filter Updated:')
   console.log('Location:', newValues.location)
   console.log('Employment Type:', newValues.employmentType)
-  console.log('Working Hours Type:', newValues.workingHoursType)
+  console.log('Working Hours:', newValues.workingHours)
 }
 </script>
 
