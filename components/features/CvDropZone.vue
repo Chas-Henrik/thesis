@@ -14,8 +14,6 @@ const emit = defineEmits<{
 
 // State
 const isDragOver = ref(false)
-const isParsing = ref(false)
-const isSuccess = ref(false)
 const errorMessage = ref<string | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
@@ -31,7 +29,7 @@ function handleFileInput(event: Event) {
   setFile(file)
 }
 
-async function setFile(file: File | null) {
+function setFile(file: File | null) {
   errorMessage.value = null
   if (!file) return
   if (file.type !== 'application/pdf') {
@@ -40,27 +38,10 @@ async function setFile(file: File | null) {
   }
 
   emit('update:modelValue', file)
-  isParsing.value = true
-  isSuccess.value = false
-
-  try {
-    const formData = new FormData()
-    formData.append('file', file)
-    await $fetch('/api/cv/parse', { method: 'POST', body: formData })
-    isSuccess.value = true
-  }
-  catch (error) {
-    const fetchError = error as { statusMessage?: string }
-    errorMessage.value = fetchError.statusMessage ?? 'Failed to extract text from PDF.'
-  }
-  finally {
-    isParsing.value = false
-  }
 }
 
 function removeFile() {
   emit('update:modelValue', null)
-  isSuccess.value = false
   errorMessage.value = null
   if (fileInputRef.value) fileInputRef.value.value = ''
 }
@@ -124,8 +105,6 @@ function openFilePicker() {
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
         <span class="truncate text-sm text-slate-700">{{ props.modelValue.name }}</span>
-        <span v-if="isParsing" class="shrink-0 text-xs text-slate-400">Extracting text…</span>
-        <span v-else-if="isSuccess" class="shrink-0 text-xs text-green-600">Text extracted</span>
       </div>
       <button
         type="button"
