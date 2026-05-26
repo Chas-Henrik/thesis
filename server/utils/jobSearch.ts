@@ -12,6 +12,12 @@ export interface MappedJob {
   af_job_id: string
 }
 
+/**
+ * Fetches all job hits from the JobSearch API for a given date range.
+ * Paginates automatically using the offset parameter until either the API
+ * returns fewer results than the page limit (last page) or the maximum
+ * allowed offset is reached.
+ */
 export const fetchAllHits = async (fromDate: string, toDate: string): Promise<Record<string, unknown>[]> => {
   const publishedAfter = encodeURIComponent(`${fromDate}T00:00:00`)
   const publishedBefore = encodeURIComponent(`${toDate}T00:00:00`)
@@ -34,14 +40,21 @@ export const fetchAllHits = async (fromDate: string, toDate: string): Promise<Re
     const hits: Record<string, unknown>[] = data.hits ?? []
     allHits.push(...hits)
 
+    // Fewer results than the limit means this is the last page
     if (hits.length < JOB_SEARCH_API_LIMIT) break
     offset += JOB_SEARCH_API_LIMIT
+    // Stop if we've reached the API's hard offset cap
     if (offset >= JOB_SEARCH_API_MAX_OFFSET) break
   }
 
   return allHits
 }
 
+/**
+ * Maps a raw API hit object to a typed MappedJob.
+ * Normalises city names to title case and falls back to null
+ * for any optional fields not present on the hit.
+ */
 export const mapHitToJob = (hit: Record<string, unknown>): MappedJob => ({
   title: hit.headline as string,
   location: ((hit.workplace_address as Record<string, unknown> | null)?.city as string | null)?.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()) ?? null,
