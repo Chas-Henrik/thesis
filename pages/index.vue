@@ -53,42 +53,39 @@ const handleKeywordSearch = (query: string, results: unknown): void => {
   console.log(`${resultCount} matches:`, results)
 }
 
+const handleCvAnalysisResult = (result: unknown): void => {
+  searchResult.value = result
+}
+
 </script>
 
 <template>
   <main class="min-h-screen bg-white text-slate-950">
-    <div class="mx-auto grid w-full grid-cols-3 items-center gap-8 px-6 py-16">
-      <div class="w-full">      
-        <CvAnalysisForm @result="searchResult = $event" />
-      </div>
-      <div class="w-full self-end">
-        <KeywordSearch @search="handleKeywordSearch" />
-      </div>
-      <DBForm class="self-start"/>
-    <div class="mx-auto flex min-h-screen w-full max-w-6xl flex-col items-center justify-start px-6 py-12 text-center">
-      <div class="mt-10 w-full">
-        <FilterMenu
-          :model-value="filterValues"
-          :locations="locations"
-          :employment-types="employmentTypes"
-          :working-hours-types="workingHoursTypes"
-          @update:model-value="handleFilterUpdate"
-        />
-      </div>
-      <div />
-      <DBForm />
+    <div class="mx-auto w-full max-w-7xl px-6 py-10">
+      <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-10">
+        <section class="space-y-6">
+          <CvAnalysisForm @result="handleCvAnalysisResult" />
 
-      <div class="mt-8 w-full text-left">
-        <AdList :ads="mockAds" />
+          <FilterMenu
+            :model-value="filterValues"
+            :locations="locations"
+            :employment-types="employmentTypes"
+            :working-hours-types="workingHoursTypes"
+            @update:model-value="handleFilterUpdate"
+          />
+        </section>
+
+        <section aria-hidden="true" class="min-h-[1px]" />
+
+        <section>
+          <DBForm />
+        </section>
+
+        <section class="lg:col-span-3">
+          <AdList :ads="mockAds" />
+        </section>
       </div>
-    </div>
-    <FilterMenu class="px-6"
-      :model-value="filterValues"
-      :locations="locations"
-      :employment-types="employmentTypes"
-      :working-hours-types="workingHoursTypes"
-      @update:model-value="handleFilterUpdate"
-    />
+
     </div>
   </main>
 </template>

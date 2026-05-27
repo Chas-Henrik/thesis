@@ -59,7 +59,7 @@ const handleSelectAd = (index: number): void => {
           rel="noopener noreferrer"
           class="mt-4 inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400"
         >
-          Open original ad
+          Arbetsförmedlingens Ad
         </a>
       </article>
     </div>
