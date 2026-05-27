@@ -87,11 +87,11 @@ const handleCvAnalysisResult = (result: unknown): void => {
           <CvAnalysisForm @result="handleCvAnalysisResult" />
 
 
-        <section class="space-y-6">
+        <section class="space-y-6 mt-auto">
           <KeywordSearch @search="handleKeywordSearch" />
         </section>
 
-        <section class="space-y-6">
+        <section class="space-y-6 mt-auto">
           <DBForm />
         </section>
         
