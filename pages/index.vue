@@ -13,6 +13,8 @@ interface KeywordSearchJob {
   location: string | null
   employment_type: string | null
   working_hours_type: string | null
+  employer_name: string | null
+  date: string | null
 }
 
 // State
@@ -52,6 +54,8 @@ const keywordSearchResults = computed<AdListItem[]>(() =>
       title: job.title,
       description: job.description,
       link: job.job_link ?? '#',
+      employer_name: job.employer_name ?? 'Unknown',
+      date: job.date ?? 'Unknown',
     }))
 )
 
@@ -97,7 +101,7 @@ const handleCvAnalysisResult = (result: unknown): void => {
             :employment-types="employmentTypes"
             :working-hours-types="workingHoursTypes"
             @update:model-value="handleFilterUpdate"
-            class="col-span-1 md:col-span-2"
+            class="col-span-1 md:col-span-2 lg:col-span-3"
           />
 
         <section class="md:col-span-2 lg:col-span-3">

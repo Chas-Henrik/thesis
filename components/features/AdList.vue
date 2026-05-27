@@ -3,8 +3,10 @@ import { computed, ref } from 'vue'
 
 export interface AdListItem {
   title: string
+  employer_name: string
   description: string
   link: string
+  date:string
 }
 
 interface Props {
@@ -22,6 +24,7 @@ const selectedIndex = ref<number>(0)
 // Computed
 const selectedAd = computed<AdListItem | null>(() => props.ads[selectedIndex.value] ?? null)
 const hasAds = computed<boolean>(() => props.ads.length > 0)
+const selectedAdDate = computed<string>(() => selectedAd.value?.date.split('T')[0] ?? '')
 
 // Methods
 const handleSelectAd = (index: number): void => {
@@ -51,7 +54,10 @@ const handleSelectAd = (index: number): void => {
       </div>
 
       <article class="rounded-lg border border-slate-200 bg-white p-4 sm:p-5" aria-live="polite">
-        <h3 class="text-base font-semibold text-slate-950">{{ selectedAd?.title }}</h3>
+        <div class="flex items-start justify-between gap-4">
+          <h3 class="text-base font-semibold text-slate-950">{{ selectedAd?.title }} - {{ selectedAd?.employer_name }}</h3>
+          <span class="shrink-0 text-sm text-slate-500">{{ selectedAdDate }}</span>
+        </div>
         <p class="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">{{ selectedAd?.description }}</p>
         <a
           :href="selectedAd?.link"
