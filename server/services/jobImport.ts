@@ -4,6 +4,7 @@
  */
 import {fetchAllHits, mapHitToJob} from '~/server/utils/jobSearch'
 import type {MappedJob} from '~/server/utils/jobSearch'
+import { updateDB } from '~/server/utils/dbUtils'
 
 interface JobImportResult {
   success: boolean
@@ -34,6 +35,8 @@ export const importDatabaseForDateRange = async (
 
     const mappedJobs: MappedJob[] = allHits.map(mapHitToJob)
     console.log('[jobImport] Imported records:', mappedJobs.length)
+
+    await updateDB(mappedJobs)
 
     return {
       success: true,

@@ -8,7 +8,7 @@ export interface MappedJob {
   job_link: string
   employment_type: string | null
   working_hours_type: string | null
-  employer: string | null
+  employer_name: string | null
   af_job_id: string
 }
 
@@ -26,7 +26,7 @@ export const fetchAllHits = async (fromDate: string, toDate: string): Promise<Re
   const allHits: Record<string, unknown>[] = []
   let offset = 0
 
-  while (true) {
+  while (offset < JOB_SEARCH_API_MAX_OFFSET) {
     const url = `${baseUrl}&offset=${offset}`
     console.log('[jobSearch] Fetching from:', url)
 
@@ -43,8 +43,6 @@ export const fetchAllHits = async (fromDate: string, toDate: string): Promise<Re
     // Fewer results than the limit means this is the last page
     if (hits.length < JOB_SEARCH_API_LIMIT) break
     offset += JOB_SEARCH_API_LIMIT
-    // Stop if we've reached the API's hard offset cap
-    if (offset >= JOB_SEARCH_API_MAX_OFFSET) break
   }
 
   return allHits
@@ -57,12 +55,12 @@ export const fetchAllHits = async (fromDate: string, toDate: string): Promise<Re
  */
 export const mapHitToJob = (hit: Record<string, unknown>): MappedJob => ({
   title: hit.headline as string,
-  location: ((hit.workplace_address as Record<string, unknown> | null)?.city as string | null)?.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()) ?? null,
+  location: (((hit.workplace_address as Record<string, unknown> | null)?.city as string | null) ?? ((hit.workplace_address as Record<string, unknown> | null)?.municipality as string | null))?.split(/\s+/).map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ') ?? null,
   date: hit.publication_date as string,
   description: ((hit.description as Record<string, unknown> | null)?.text as string | null) ?? null,
   job_link: hit.webpage_url as string,
   employment_type: ((hit.employment_type as Record<string, unknown> | null)?.label as string | null) ?? null,
   working_hours_type: ((hit.working_hours_type as Record<string, unknown> | null)?.label as string | null) ?? null,
-  employer: ((hit.employer as Record<string, unknown> | null)?.name as string | null) ?? null,
+  employer_name: ((hit.employer as Record<string, unknown> | null)?.name as string | null) ?? null,
   af_job_id: hit.id as string,
 })
