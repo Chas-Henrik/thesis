@@ -55,9 +55,10 @@ const handleSelectAd = (index: number): void => {
 
       <article class="rounded-lg border border-slate-200 bg-white p-4 sm:p-5" aria-live="polite">
         <div class="flex items-start justify-between gap-4">
-          <h3 class="text-base font-semibold text-slate-950">{{ selectedAd?.title }} - {{ selectedAd?.employer_name }}</h3>
+          <h3 class="text-base font-semibold text-slate-950">{{ selectedAd?.title }}</h3>
           <span class="shrink-0 text-sm text-slate-500">{{ selectedAdDate }}</span>
         </div>
+        <h4 class="text-base font-semibold text-blue-500 mt-2">{{ selectedAd?.employer_name }}</h4>
         <p class="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">{{ selectedAd?.description }}</p>
         <a
           :href="selectedAd?.link"
