@@ -97,7 +97,7 @@ const handleCvAnalysisResult = (result: unknown): void => {
             :employment-types="employmentTypes"
             :working-hours-types="workingHoursTypes"
             @update:model-value="handleFilterUpdate"
-            class="col-span-2 lg:col-span-2"
+            class="col-span-1 md:col-span-2"
           />
 
         <section class="md:col-span-2 lg:col-span-3">
