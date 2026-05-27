@@ -62,6 +62,18 @@ const handleWorkingHoursSelect = (hours: string): void => {
   workingHoursDropdown.value?.closeDropdown()
 }
 
+const handleResetFilters = (): void => {
+  selectedLocation.value = ''
+  selectedEmploymentType.value = ''
+  selectedWorkingHours.value = ''
+
+  locationDropdown.value?.closeDropdown()
+  employmentTypeDropdown.value?.closeDropdown()
+  workingHoursDropdown.value?.closeDropdown()
+
+  emitUpdate()
+}
+
 const emitUpdate = (): void => {
   emit('update:modelValue', {
     location: selectedLocation.value,
@@ -77,63 +89,73 @@ const emitUpdate = (): void => {
     <h2 class="text-lg font-semibold text-slate-950">Filter Results</h2>
 
     <!-- Filters Grid -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <!-- Location Dropdown -->
-      <BaseDropDown
-        ref="locationDropdown"
-        :label="locationLabel"
-      >
-        <template #dropdown>
-          <button
-            v-for="location in props.locations"
-            :key="location"
-            type="button"
-            class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors duration-150"
-            :aria-label="`Filter by location: ${location}`"
-            @click="handleLocationSelect(location)"
-          >
-            {{ location }}
-          </button>
-        </template>
-      </BaseDropDown>
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <!-- Location Dropdown -->
+        <BaseDropDown
+          ref="locationDropdown"
+          :label="locationLabel"
+        >
+          <template #dropdown>
+            <button
+              v-for="location in props.locations"
+              :key="location"
+              type="button"
+              class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors duration-150"
+              :aria-label="`Filter by location: ${location}`"
+              @click="handleLocationSelect(location)"
+            >
+              {{ location }}
+            </button>
+          </template>
+        </BaseDropDown>
 
-      <!-- Employment Type Dropdown -->
-      <BaseDropDown
-        ref="employmentTypeDropdown"
-        :label="employmentTypeLabel"
-      >
-        <template #dropdown>
-          <button
-            v-for="type in props.employmentTypes"
-            :key="type"
-            type="button"
-            class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors duration-150"
-            :aria-label="`Filter by employment type: ${type}`"
-            @click="handleEmploymentTypeSelect(type)"
-          >
-            {{ type }}
-          </button>
-        </template>
-      </BaseDropDown>
+        <!-- Employment Type Dropdown -->
+        <BaseDropDown
+          ref="employmentTypeDropdown"
+          :label="employmentTypeLabel"
+        >
+          <template #dropdown>
+            <button
+              v-for="type in props.employmentTypes"
+              :key="type"
+              type="button"
+              class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors duration-150"
+              :aria-label="`Filter by employment type: ${type}`"
+              @click="handleEmploymentTypeSelect(type)"
+            >
+              {{ type }}
+            </button>
+          </template>
+        </BaseDropDown>
 
-      <!-- Working Hours Type Dropdown -->
-      <BaseDropDown
-        ref="workingHoursDropdown"
-        :label="workingHoursLabel"
+        <!-- Working Hours Type Dropdown -->
+        <BaseDropDown
+          ref="workingHoursDropdown"
+          :label="workingHoursLabel"
+        >
+          <template #dropdown>
+            <button
+              v-for="hours in props.workingHoursTypes"
+              :key="hours"
+              type="button"
+              class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors duration-150"
+              :aria-label="`Filter by working hours: ${hours}`"
+              @click="handleWorkingHoursSelect(hours)"
+            >
+              {{ hours }}
+            </button>
+          </template>
+        </BaseDropDown>
+      </div>
+
+      <button
+        type="button"
+        class="inline-flex h-10 items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+        @click="handleResetFilters"
       >
-        <template #dropdown>
-          <button
-            v-for="hours in props.workingHoursTypes"
-            :key="hours"
-            type="button"
-            class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors duration-150"
-            :aria-label="`Filter by working hours: ${hours}`"
-            @click="handleWorkingHoursSelect(hours)"
-          >
-            {{ hours }}
-          </button>
-        </template>
-      </BaseDropDown>
+        Reset filters
+      </button>
     </div>
   </div>
 </template>
