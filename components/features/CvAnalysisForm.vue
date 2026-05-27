@@ -9,8 +9,8 @@ const emit = defineEmits<{
 
 // State
 const cvFile = ref<File | null>(null)
-const cvSearchOption = ref<string>('Extracted CV')
-const adSearchOption = ref<string>('Extracted Ad')
+const cvSearchOption = ref<string>('Raw CV Info')
+const adSearchOption = ref<string>('Raw Ad Info')
 const submitting = ref(false)
 const errorMessage = ref<string | null>(null)
 const success = ref(false)
@@ -18,8 +18,8 @@ const success = ref(false)
 const cvDropdownRef = ref<InstanceType<typeof BaseDropdown> | null>(null)
 const adDropdownRef = ref<InstanceType<typeof BaseDropdown> | null>(null)
 
-const cvOptions = ['Extracted CV', 'Raw CV Info']
-const adOptions = ['Extracted Ad', 'Raw Ad Info']
+const cvOptions = ['Raw CV Info', 'Extracted CV']
+const adOptions = ['Raw Ad Info', 'Extracted Ad']
 
 // Computed
 const isSubmitDisabled = computed(() => !cvFile.value || submitting.value)
