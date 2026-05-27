@@ -29,7 +29,6 @@ const emit = defineEmits<{
   search: [query: string, results: Job[]]
 }>()
 
-const searchInput = ref<HTMLInputElement>()
 const searchQuery = ref<string>('')
 const isSearching = ref<boolean>(false)
 
@@ -78,7 +77,6 @@ onMounted(() => {
     <div class="flex items-center gap-2">
       <div class="relative flex-1">
         <input
-          ref="searchInput"
           v-model="searchQuery"
           type="text"
           placeholder="Search by keyword..."

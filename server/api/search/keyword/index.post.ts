@@ -80,6 +80,7 @@ export default defineEventHandler(async (event): Promise<SearchResponse> => {
       },
     })
     console.log(`[search] Found ${results.length} results for query: "${query}"`)
+    
     // Convert BigInt id to string for JSON serialization
     const serializedResults = results.map(job => ({
       ...job,
