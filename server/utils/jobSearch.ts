@@ -55,7 +55,7 @@ export const fetchAllHits = async (fromDate: string, toDate: string): Promise<Re
  */
 export const mapHitToJob = (hit: Record<string, unknown>): MappedJob => ({
   title: hit.headline as string,
-  location: ((hit.workplace_address as Record<string, unknown> | null)?.city as string | null)?.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()) ?? null,
+  location: (((hit.workplace_address as Record<string, unknown> | null)?.city as string | null) ?? ((hit.workplace_address as Record<string, unknown> | null)?.municipality as string | null))?.split(/\s+/).map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ') ?? null,
   date: hit.publication_date as string,
   description: ((hit.description as Record<string, unknown> | null)?.text as string | null) ?? null,
   job_link: hit.webpage_url as string,
