@@ -30,8 +30,9 @@ const handleFilterUpdate = (newValues: typeof filterValues.value): void => {
 
 const handleKeywordSearch = (query: string, results: unknown): void => {
   keywordSearchResults.value = results
+  const resultCount = Array.isArray(results) ? results.length : ''
   console.log('Keyword search:', query)
-  console.log('Results:', results)
+  console.log(`${resultCount} matches:`, results)
 }
 
 </script>
