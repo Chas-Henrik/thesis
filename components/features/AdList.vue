@@ -59,7 +59,7 @@ const handleSelectAd = (index: number): void => {
           <span class="shrink-0 text-sm text-slate-500">{{ selectedAdDate }}</span>
         </div>
         <h4 class="text-xl font-semibold text-blue-500 mt-2">{{ selectedAd?.employer_name }}</h4>
-        <p class="mt-3 whitespace-pre-line text-base leading-6 text-slate-700">{{ selectedAd?.description }}</p>
+        <p class="mt-3 whitespace-pre-line text-base leading-6 text-slate-700" style="word-break: break-word; overflow-wrap: break-word;">{{ selectedAd?.description }}</p>
         <a
           :href="selectedAd?.link"
           target="_blank"
