@@ -25,10 +25,10 @@ interface SearchResponse {
 
 export default defineEventHandler(async (event): Promise<SearchResponse> => {
   try {
-    const body = await readBody<SearchRequest>(event)
+    const query = getQuery(event).query as string
 
     // Validate input
-    if (!body?.query || typeof body.query !== 'string') {
+    if (!query || typeof query !== 'string') {
       return {
         success: false,
         data: [],
@@ -36,9 +36,9 @@ export default defineEventHandler(async (event): Promise<SearchResponse> => {
       }
     }
 
-    const query = body.query.trim()
+    const trimmedQuery = query.trim()
 
-    if (query.length === 0) {
+    if (trimmedQuery.length === 0) {
       return {
         success: false,
         data: [],
@@ -54,13 +54,13 @@ export default defineEventHandler(async (event): Promise<SearchResponse> => {
         OR: [
           {
             title: {
-              contains: query,
+              contains: trimmedQuery,
               mode: 'insensitive',
             },
           },
           {
             description: {
-              contains: query,
+              contains: trimmedQuery,
               mode: 'insensitive',
             },
           },
@@ -79,7 +79,7 @@ export default defineEventHandler(async (event): Promise<SearchResponse> => {
         af_job_id: true,
       },
     })
-    console.log(`[search] Found ${results.length} results for query: "${query}"`)
+    console.log(`[search] Found ${results.length} results for query: "${trimmedQuery}"`)
     
     // Convert BigInt id to string for JSON serialization
     const serializedResults = results.map(job => ({

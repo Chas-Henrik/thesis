@@ -47,8 +47,8 @@ async function handleSearch(): Promise<void> {
 
   try {
     const response = await $fetch<SearchResult>('/api/search/keyword', {
-      method: 'POST',
-      body: {
+      method: 'GET',
+      query: {
         query,
       },
     })
