@@ -92,7 +92,7 @@ export const updateDB = async (mappedJobs: MappedJob[]): Promise<void> => {
     for (const job of newJobsToInsert) {
       const embeddingResponse = await ai.models.embedContent({
         model: "gemini-embedding-001",
-        contents: job.description || "",
+        contents: `${job.title} ${job.description ?? ''}`.trim(),
         config: { outputDimensionality: 768 }
       });
       newJobsWithEmbeddings.push({
