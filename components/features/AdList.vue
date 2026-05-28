@@ -42,7 +42,7 @@ const handleSelectAd = (index: number): void => {
     <h2 class="text-lg font-semibold text-slate-950">Job Ads</h2>
 
     <div v-if="hasAds" class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,19rem)_1fr]">
-      <div class="max-h-[28rem] overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-2">
+      <div class="h-full overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-2">
         <ul class="space-y-2">
           <li v-for="(ad, index) in props.ads" :key="`${ad.link}-${index}`">
             <button

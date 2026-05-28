@@ -20,6 +20,7 @@ const adDropdownRef = ref<InstanceType<typeof BaseDropdown> | null>(null)
 
 const cvOptions = ['Raw CV Info', 'Extracted CV']
 const adOptions = ['Raw Ad Info', 'Extracted Ad']
+const topK = ref<number>(10)
 
 // Computed
 const isSubmitDisabled = computed(() => !cvFile.value || submitting.value)
@@ -45,6 +46,7 @@ async function handleSubmit() {
     formData.append('file', cvFile.value!)
     formData.append('cvSearchOption', cvSearchOption.value)
     formData.append('adSearchOption', adSearchOption.value)
+    formData.append('topK', String(topK.value))
 
     const response = await $fetch('/api/search/semantic', {
       method: 'POST',
@@ -120,6 +122,20 @@ async function handleSubmit() {
           </template>
         </BaseDropdown>
       </div>
+    </div>
+
+    <!-- Number of Results -->
+    <div class="mb-6">
+      <label for="top-k" class="mb-1 block text-sm font-medium text-slate-700">Number of Results</label>
+      <input
+        id="top-k"
+        v-model.number="topK"
+        type="number"
+        :min="1"
+        :max="50"
+        :disabled="submitting"
+        class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
+      />
     </div>
 
     <!-- Submit Button -->

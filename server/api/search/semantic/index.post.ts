@@ -11,6 +11,7 @@ export default defineEventHandler(async (event) => {
   const formData = await readFormData(event)
   const cvSearchOption = formData.get('cvSearchOption') as string | null
   const file = formData.get('file')
+  const topK = formData.get('topK') as string | null
 
 
   if (!file || !(file instanceof Blob)) {
@@ -26,7 +27,7 @@ export default defineEventHandler(async (event) => {
 
   const embedding = await createCVEmbedding(text, cvSearchOption)
   
-  const response = await cvDBCosineSimilaritySearch(embedding, 10)
+  const response = await cvDBCosineSimilaritySearch(embedding, topK ? parseInt(topK) : 10)
 
   return { success: true, data: response }
 })
