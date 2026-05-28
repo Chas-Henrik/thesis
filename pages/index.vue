@@ -6,7 +6,7 @@ import FilterMenu from '~/components/features/FilterMenu.vue'
 import CvAnalysisForm from '~/components/features/CvAnalysisForm.vue'
 import KeywordSearch from '~/components/features/KeywordSearch.vue'
 
-interface KeywordSearchJob {
+interface JobSearchResult {
   title: string
   description: string
   job_link: string | null
@@ -15,11 +15,11 @@ interface KeywordSearchJob {
   working_hours_type: string | null
   employer_name: string | null
   date: string | null
+  similarity?: number
 }
 
 // State
-const searchResult = ref<unknown>(null)
-const keywordSearchJobs = ref<KeywordSearchJob[]>([])
+const searchResultJobs = ref<JobSearchResult[]>([])
 
 const filterValues = ref({
   location: '',
@@ -29,20 +29,20 @@ const filterValues = ref({
 
 // Computed
 const locations = computed<string[]>(() =>
-  [...new Set(keywordSearchJobs.value.map(j => j.location).filter((v): v is string => v !== null))]
+  [...new Set(searchResultJobs.value.map(j => j.location).filter((v): v is string => v !== null))]
     .sort((a, b) => a.localeCompare(b, 'sv'))
 )
 
 const employmentTypes = computed<string[]>(() =>
-  [...new Set(keywordSearchJobs.value.map(j => j.employment_type).filter((v): v is string => v !== null))]
+  [...new Set(searchResultJobs.value.map(j => j.employment_type).filter((v): v is string => v !== null))]
 )
 
 const workingHoursTypes = computed<string[]>(() =>
-  [...new Set(keywordSearchJobs.value.map(j => j.working_hours_type).filter((v): v is string => v !== null))]
+  [...new Set(searchResultJobs.value.map(j => j.working_hours_type).filter((v): v is string => v !== null))]
 )
 
 const keywordSearchResults = computed<AdListItem[]>(() =>
-  keywordSearchJobs.value
+  searchResultJobs.value
     .filter((job) => {
       const matchesLocation = !filterValues.value.location || job.location === filterValues.value.location
       const matchesEmploymentType = !filterValues.value.employmentType || job.employment_type === filterValues.value.employmentType
@@ -56,6 +56,7 @@ const keywordSearchResults = computed<AdListItem[]>(() =>
       link: job.job_link ?? '#',
       employer_name: job.employer_name ?? 'Unknown',
       date: job.date ?? 'Unknown',
+      similarity_score: job.similarity,
     }))
 )
 
@@ -68,14 +69,14 @@ const handleFilterUpdate = (newValues: typeof filterValues.value): void => {
   console.log('Working Hours:', newValues.workingHours)
 }
 
-const handleKeywordSearch = (query: string, results: KeywordSearchJob[]): void => {
-  keywordSearchJobs.value = results
+const handleKeywordSearch = (query: string, results: JobSearchResult[]): void => {
+  searchResultJobs.value = results
   console.log('Keyword search:', query)
   console.log(`${results.length} matches:`, results)
 }
 
 const handleCvAnalysisResult = (result: unknown): void => {
-  searchResult.value = result
+  searchResultJobs.value = (result as JobSearchResult[])
 }
 
 </script>

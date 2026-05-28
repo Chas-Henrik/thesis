@@ -4,10 +4,15 @@
  */
 
 import { extractTextFromPdf } from '~/server/utils/pdfParser'
+import { cvDBCosineSimilaritySearch, createCVEmbedding } from '~/server/utils/dbUtils'
+
 
 export default defineEventHandler(async (event) => {
   const formData = await readFormData(event)
+  const cvSearchOption = formData.get('cvSearchOption') as string | null
   const file = formData.get('file')
+  const topK = formData.get('topK') as string | null
+
 
   if (!file || !(file instanceof Blob)) {
     throw createError({ statusCode: 400, statusMessage: 'Missing file field in form data' })
@@ -20,8 +25,10 @@ export default defineEventHandler(async (event) => {
   const buffer = new Uint8Array(await file.arrayBuffer())
   const text = await extractTextFromPdf(buffer)
 
-  console.log('[search/semantic] Extracted text:', text)
+  const embedding = await createCVEmbedding(text, cvSearchOption)
+  
+  const response = await cvDBCosineSimilaritySearch(embedding, topK ? parseInt(topK) : 10)
 
-  return { success: true }
+  return { success: true, data: response }
 })
 

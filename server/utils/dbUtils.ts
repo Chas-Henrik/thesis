@@ -1,5 +1,7 @@
 import { getServerSupabaseClient } from './supabase'
 import type { MappedJob } from '~/server/utils/jobSearch'
+import { GoogleGenAI } from "@google/genai";
+import { EMBEDDING_TIMEOUT_MS } from '~/constants/jobSearch'
 
 /**
  * Fetches all af_job_id values from the jobs table in Supabase.
@@ -49,6 +51,11 @@ export const updateDB = async (mappedJobs: MappedJob[]): Promise<void> => {
   const supabase = getServerSupabaseClient()
   const apiAfJobIds = mappedJobs.map(job => job.af_job_id)
   const existingAfJobIds = await fetchAllExistingJobIds()
+  const ai = new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY,
+    httpOptions: { timeout: 30_000 },
+  }); 
+
   console.log(`[updateDB] Imported job IDs: ${apiAfJobIds.length}, Existing job IDs: ${existingAfJobIds.length}`)
 
   // Find jobs to delete
@@ -76,20 +83,87 @@ export const updateDB = async (mappedJobs: MappedJob[]): Promise<void> => {
 
   // Insert new jobs
   if (newAfJobIds.length > 0) {
+
     const newJobsToInsert = mappedJobs
       .filter(job => newAfJobIds.includes(job.af_job_id))
 
+
+    const newJobsWithEmbeddings = []
+    for (const job of newJobsToInsert) {
+      const embeddingResponse = await ai.models.embedContent({
+        model: "gemini-embedding-001",
+        contents: `${job.title} ${job.description ?? ''}`.trim(),
+        config: { outputDimensionality: 768 }
+      });
+      newJobsWithEmbeddings.push({
+        ...job,
+        raw_description_embedding: embeddingResponse.embeddings?.[0]?.values ?? null
+      })
+      await new Promise(resolve => setTimeout(resolve, EMBEDDING_TIMEOUT_MS))
+    }
+
     const { error: insertError } = await supabase
       .from('jobs')
-      .insert(newJobsToInsert)
+      .insert(newJobsWithEmbeddings)
+
+
 
     if (insertError) {
       console.error('Error inserting jobs:', insertError)
       throw new Error(`Failed to insert jobs: ${insertError.message}`)
     }
+
     console.log(`[updateDB] Inserted ${newAfJobIds.length} new jobs`)
   }
 }
 
+export interface JobSearchResult {
+  id: string
+  title: string
+  location: string | null
+  date: string | null
+  description: string
+  job_link: string | null
+  employer_name: string | null
+  employment_type: string | null
+  working_hours_type: string | null
+  af_job_id: string
+  similarity: number
+}
+
+export const cvDBCosineSimilaritySearch = async (
+  embedding: number[],
+  topK: number = 5,
+): Promise<JobSearchResult[]> => {
+  const supabase = getServerSupabaseClient()
+
+  const { data, error } = await supabase.rpc('match_jobs_cosine', {
+    query_embedding: embedding,
+    match_count: topK,
+  })
+
+  if (error) {
+    throw new Error(`Cosine similarity search failed: ${error.message}`)
+  }
+
+  return data as JobSearchResult[]
+}
 
 
+export const createCVEmbedding = async (text: string, cvSearchOption: string | null) => {
+
+  const ai = new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY
+  }); 
+
+  if(cvSearchOption === 'Raw CV Info') {
+    const embeddingResponse = await ai.models.embedContent({
+    model: "gemini-embedding-001",
+      contents: text,
+      config: { outputDimensionality: 768 }
+    });
+    return embeddingResponse.embeddings?.[0]?.values ?? []
+  }
+  else return []
+
+}
