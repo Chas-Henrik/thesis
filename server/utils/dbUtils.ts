@@ -1,5 +1,6 @@
 import { getServerSupabaseClient } from './supabase'
 import type { MappedJob } from '~/server/utils/jobSearch'
+import { GoogleGenAI } from "@google/genai";
 
 /**
  * Fetches all af_job_id values from the jobs table in Supabase.
@@ -49,6 +50,10 @@ export const updateDB = async (mappedJobs: MappedJob[]): Promise<void> => {
   const supabase = getServerSupabaseClient()
   const apiAfJobIds = mappedJobs.map(job => job.af_job_id)
   const existingAfJobIds = await fetchAllExistingJobIds()
+  const ai = new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY
+  }); 
+
   console.log(`[updateDB] Imported job IDs: ${apiAfJobIds.length}, Existing job IDs: ${existingAfJobIds.length}`)
 
   // Find jobs to delete
@@ -76,17 +81,34 @@ export const updateDB = async (mappedJobs: MappedJob[]): Promise<void> => {
 
   // Insert new jobs
   if (newAfJobIds.length > 0) {
+
     const newJobsToInsert = mappedJobs
       .filter(job => newAfJobIds.includes(job.af_job_id))
 
+
+    const newJobsWithEmbeddings = await Promise.all(newJobsToInsert.map(async (job) => {
+      const embeddingResponse = await ai.models.embedContent({
+        model: "gemini-embedding-001",
+        contents: job.description || "",
+        config: { outputDimensionality: 768 }
+      });
+      return {
+        ...job,
+        raw_description_embedding: embeddingResponse.embeddings?.[0]?.values ?? null
+      }
+    }))
+
     const { error: insertError } = await supabase
       .from('jobs')
-      .insert(newJobsToInsert)
+      .insert(newJobsWithEmbeddings)
+
+
 
     if (insertError) {
       console.error('Error inserting jobs:', insertError)
       throw new Error(`Failed to insert jobs: ${insertError.message}`)
     }
+
     console.log(`[updateDB] Inserted ${newAfJobIds.length} new jobs`)
   }
 }
