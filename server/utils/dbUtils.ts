@@ -1,6 +1,7 @@
 import { getServerSupabaseClient } from './supabase'
 import type { MappedJob } from '~/server/utils/jobSearch'
 import { GoogleGenAI } from "@google/genai";
+import { EMBEDDING_TIMEOUT_MS } from '~/constants/jobSearch'
 
 /**
  * Fetches all af_job_id values from the jobs table in Supabase.
@@ -98,7 +99,7 @@ export const updateDB = async (mappedJobs: MappedJob[]): Promise<void> => {
         ...job,
         raw_description_embedding: embeddingResponse.embeddings?.[0]?.values ?? null
       })
-      await new Promise(resolve => setTimeout(resolve, 7000))
+      await new Promise(resolve => setTimeout(resolve, EMBEDDING_TIMEOUT_MS))
     }
 
     const { error: insertError } = await supabase

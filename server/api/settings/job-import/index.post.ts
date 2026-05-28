@@ -77,7 +77,7 @@ export default defineEventHandler(async (event): Promise<JobImportResponse> => {
         return await importDatabaseForDateRange(body.fromDate, body.toDate)
       },
       {
-        timeout: 30000, // 30 seconds
+        timeout: 30000000, // 30 seconds
       }
     )
 
