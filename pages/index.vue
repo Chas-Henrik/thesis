@@ -15,6 +15,7 @@ interface JobSearchResult {
   working_hours_type: string | null
   employer_name: string | null
   date: string | null
+  similarity?: number
 }
 
 // State
@@ -55,6 +56,7 @@ const keywordSearchResults = computed<AdListItem[]>(() =>
       link: job.job_link ?? '#',
       employer_name: job.employer_name ?? 'Unknown',
       date: job.date ?? 'Unknown',
+      similarity_score: job.similarity,
     }))
 )
 

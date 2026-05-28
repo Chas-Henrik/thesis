@@ -7,6 +7,7 @@ export interface AdListItem {
   description: string
   link: string
   date:string
+  similarity_score?: number
 }
 
 interface Props {
@@ -52,7 +53,7 @@ const handleSelectAd = (index: number): void => {
               :aria-pressed="index === selectedIndex"
               @click="handleSelectAd(index)"
             >
-              <span class="block text-sm font-semibold">{{ ad.title }}</span>
+              <span class="block text-sm font-semibold">{{ ad.title }} {{ ad.similarity_score ? `(${(ad.similarity_score * 100).toFixed(2)}%)` : '' }}</span>
             </button>
           </li>
         </ul>
