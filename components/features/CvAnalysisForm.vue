@@ -50,7 +50,8 @@ async function handleSubmit() {
       method: 'POST',
       body: formData,
     })
-    emit('result', response)
+    
+    emit('result', response.data)
     success.value = true
   }
   catch (error) {

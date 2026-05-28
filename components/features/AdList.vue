@@ -21,6 +21,11 @@ const props = withDefaults(defineProps<Props>(), {
 // State (ref/reactive)
 const selectedIndex = ref<number>(0)
 
+// Watchers
+watch(() => props.ads, () => {
+  selectedIndex.value = 0
+})
+
 // Computed
 const selectedAd = computed<AdListItem | null>(() => props.ads[selectedIndex.value] ?? null)
 const hasAds = computed<boolean>(() => props.ads.length > 0)
