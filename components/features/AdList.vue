@@ -48,12 +48,18 @@ const handleSelectAd = (index: number): void => {
           <li v-for="(ad, index) in props.ads" :key="`${ad.link}-${index}`">
             <button
               type="button"
-              class="w-full rounded-md border px-3 py-3 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400"
+              class="flex w-full items-center gap-2 rounded-md border px-3 py-3 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400"
               :class="index === selectedIndex ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-900 hover:bg-slate-100'"
               :aria-pressed="index === selectedIndex"
               @click="handleSelectAd(index)"
             >
-              <span class="block text-sm font-semibold">{{ ad.title }} {{ ad.similarity_score ? `(${(ad.similarity_score * 100).toFixed(2)}%)` : '' }}</span>
+              <span class="min-w-0 flex-1 text-sm font-semibold">{{ ad.title }}</span>
+              <span
+                v-if="ad.similarity_score"
+                class="shrink-0 rounded-full bg-yellow-300 px-2 py-0.5 text-xs font-semibold text-slate-900"
+              >
+                {{ (ad.similarity_score * 100).toFixed(2) }}%
+              </span>
             </button>
           </li>
         </ul>
