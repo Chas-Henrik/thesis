@@ -53,7 +53,7 @@ const handleSelectAd = (index: number): void => {
               :aria-pressed="index === selectedIndex"
               @click="handleSelectAd(index)"
             >
-              <span class="min-w-0 flex-1 text-sm font-semibold">{{ ad.title }}</span>
+              <span class="min-w-0 flex-1 text-sm font-semibold" style="word-break: break-word; overflow-wrap: break-word;">{{ ad.title }}</span>
               <span
                 v-if="ad.similarity_score"
                 class="shrink-0 rounded-full bg-yellow-300 px-2 py-0.5 text-xs font-semibold text-slate-900"
