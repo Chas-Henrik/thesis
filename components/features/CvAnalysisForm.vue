@@ -9,7 +9,8 @@ const emit = defineEmits<{
 
 // State
 const cvFile = ref<File | null>(null)
-const cvSearchOption = ref<string>('Raw CV Info')
+const freetextQuery = ref<string>('')
+const cvSearchOption = ref<string | null>('Raw CV Info')
 const adSearchOption = ref<string>('Raw Ad Info')
 const submitting = ref(false)
 const errorMessage = ref<string | null>(null)
@@ -23,7 +24,22 @@ const adOptions = ['Raw Ad Info', 'Extracted Ad']
 const topK = ref<number>(10)
 
 // Computed
-const isSubmitDisabled = computed(() => !cvFile.value || submitting.value)
+const isSubmitDisabled = computed(() => (!cvFile.value && !freetextQuery.value) || submitting.value)
+
+// Watchers
+watch(freetextQuery, (newValue) => {
+  if (newValue.trim()) {
+    cvFile.value = null
+    cvSearchOption.value = null
+  }
+})
+
+watch(cvFile, (newValue) => {
+  if (newValue) {
+    freetextQuery.value = ''
+    cvSearchOption.value = 'Raw CV Info'
+  }
+})
 
 // Methods
 function selectCvOption(option: string) {
@@ -43,8 +59,16 @@ async function handleSubmit() {
 
   try {
     const formData = new FormData()
-    formData.append('file', cvFile.value!)
-    formData.append('cvSearchOption', cvSearchOption.value)
+    
+    if (cvFile.value) {
+      formData.append('file', cvFile.value)
+    } else if (freetextQuery.value.trim()) {
+      formData.append('freetextQuery', freetextQuery.value.trim())
+    }
+    
+    if (cvSearchOption.value) {
+      formData.append('cvSearchOption', cvSearchOption.value)
+    }
     formData.append('adSearchOption', adSearchOption.value)
     formData.append('topK', String(topK.value))
 
@@ -72,9 +96,27 @@ async function handleSubmit() {
     class="w-full max-w-lg rounded-xl border border-slate-300 bg-white p-6 shadow-sm"
     @submit.prevent="handleSubmit"
   >
+    <!-- Freetext Search -->
+    <div class="mb-6">
+      <label for="freetext-query" class="mb-1 block text-sm font-medium text-slate-700">
+        Freetext Search
+      </label>
+      <input
+        id="freetext-query"
+        v-model="freetextQuery"
+        type="text"
+        placeholder="Enter freetext search string..."
+        :disabled="submitting"
+        class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
+      />
+    </div>
+
     <!-- CV Upload -->
     <div class="mb-6">
-      <CvDropZone v-model="cvFile" />
+      <label class="mb-1 block text-sm font-medium text-slate-700">
+        CV Upload
+      </label>
+      <CvDropZone v-model="cvFile" :disabled="freetextQuery.trim().length > 0 || submitting" />
     </div>
 
     <!-- Dropdowns -->
@@ -83,7 +125,7 @@ async function handleSubmit() {
         <label class="mb-1 block text-sm font-medium text-slate-700">
           CV Search Options <span class="text-red-600">*</span>
         </label>
-        <BaseDropdown ref="cvDropdownRef" :label="cvSearchOption" :disabled="submitting">
+        <BaseDropdown ref="cvDropdownRef" :label="cvSearchOption || 'Select option'" :disabled="submitting || freetextQuery.trim().length > 0">
           <template #dropdown>
             <ul role="menu">
               <li
