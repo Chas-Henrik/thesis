@@ -4,10 +4,12 @@ import { onMounted, onUnmounted, ref } from 'vue'
 interface Props {
   label: string
   isOpen?: boolean
+  disabled?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   isOpen: false,
+  disabled: false,
 })
 
 const emit = defineEmits<{
@@ -20,6 +22,7 @@ const isDropdownOpen = ref(false)
 
 // Methods
 const toggleDropdown = (): void => {
+  if (props.disabled) return
   isDropdownOpen.value = !isDropdownOpen.value
   emit('toggle')
 }
@@ -58,11 +61,15 @@ defineExpose({
     <!-- Dropdown button -->
     <button
       type="button"
+      :disabled="disabled"
       aria-haspopup="true"
       :aria-expanded="isDropdownOpen"
       :aria-label="`${label} dropdown menu`"
       @click="toggleDropdown"
-      class="flex items-center justify-between w-full px-4 py-2 text-left bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 transition-colors duration-150"
+      :class="[
+        'flex items-center justify-between w-full px-4 py-2 text-left bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 transition-colors duration-150',
+        disabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50',
+      ]"
     >
       <!-- Label text on the left -->
       <span class="text-gray-700 font-medium">{{ label }}</span>
