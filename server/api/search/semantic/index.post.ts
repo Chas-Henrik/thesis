@@ -42,6 +42,12 @@ export default defineEventHandler(async (event) => {
   
   const response = await cvDBCosineSimilaritySearch(embedding, topK ? parseInt(topK) : 10)
 
+  // Log similarity and title of search results
+  console.log(`SEMANTIC SEARCH RESULTS:`)
+  response.forEach((result, index) => {
+    console.log(`${index + 1}: Similarity=${result.similarity}, Title=${result.title}`)
+  })
+
   return { success: true, data: response }
 })
 
