@@ -63,16 +63,10 @@ const filteredSearchResults = computed<AdListItem[]>(() =>
 // Methods
 const handleFilterUpdate = (newValues: typeof filterValues.value): void => {
   filterValues.value = newValues
-  console.log('Filter Updated:')
-  console.log('Location:', newValues.location)
-  console.log('Employment Type:', newValues.employmentType)
-  console.log('Working Hours:', newValues.workingHours)
 }
 
 const handleKeywordSearch = (query: string, results: JobSearchResult[]): void => {
   searchResultJobs.value = results
-  console.log('Keyword search:', query)
-  console.log(`${results.length} matches:`, results)
 }
 
 const handleSematicSearch = (result: unknown): void => {
