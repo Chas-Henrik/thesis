@@ -79,10 +79,13 @@ const handleSematicSearch = (result: unknown): void => {
   <main class="min-h-screen bg-white text-slate-950">
     <div class="mx-auto w-full max-w-7xl px-6 py-10">
       <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-10">
-        <CvAnalysisForm @result="handleSematicSearch" />
-
-        <section class="space-y-6 mt-auto">
-          <KeywordSearch @search="handleKeywordSearch" />
+        <section>
+          <h1 class="text-lg pl-2 font-semibold mb-4">Semantic Search</h1>
+          <CvAnalysisForm @result="handleSematicSearch" />
+        </section>
+        <section class="space-y-6 flex">
+          <h1 class="text-lg font-semibold ml-2">Keyword Search</h1>
+          <KeywordSearch class="mt-auto" @search="handleKeywordSearch" />
         </section>
 
         <section class="space-y-6">
