@@ -2,6 +2,8 @@ import { getServerSupabaseClient } from './supabase'
 import type { MappedJob } from '~/server/utils/jobSearch'
 import { GoogleGenAI } from "@google/genai";
 import { EMBEDDING_TIMEOUT_MS } from '~/constants/jobSearch'
+import * as fs from 'fs'
+import * as path from 'path'
 
 /**
  * Creates an embedding with exponential backoff retry logic for transient errors.
@@ -32,6 +34,41 @@ const createEmbeddingWithRetry = async (
         throw error
       }
     }
+  }
+}
+
+/**
+ * Logs job description and extracted info to a file for debugging/analysis.
+ */
+const logJobExtractionToFile = (jobId: string, description: string, extractedInfo: string): void => {
+  try {
+    const logsDir = path.join(process.cwd(), 'server', 'logs')
+    if (!fs.existsSync(logsDir)) {
+      fs.mkdirSync(logsDir, { recursive: true })
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+    const filename = path.join(logsDir, `job-extraction-${timestamp}.log`)
+    
+    const logEntry = `
+================================================================================
+Job ID: ${jobId}
+Timestamp: ${new Date().toISOString()}
+================================================================================
+
+--- RAW DESCRIPTION ---
+${description}
+
+--- EXTRACTED INFO ---
+${extractedInfo}
+
+================================================================================
+`
+
+    fs.appendFileSync(filename, logEntry, 'utf-8')
+    console.log(`[Log] Job extraction logged to ${filename}`)
+  } catch (error) {
+    console.error('[Log Error] Failed to write extraction log:', error)
   }
 }
 
@@ -125,6 +162,9 @@ export const updateDB = async (mappedJobs: MappedJob[]): Promise<void> => {
     for (const job of newJobsToInsert) {
       try {
         const extractJobInfo = await extractJobAdSkillsAndExperience(job.description)
+        
+        // Log raw description and extracted info to file
+        logJobExtractionToFile(job.af_job_id, job.description ?? '', extractJobInfo)
 
         const extractedEmbeddingResponse = await createEmbeddingWithRetry(ai, extractJobInfo)
         const rawEmbeddingResponse = await createEmbeddingWithRetry(
