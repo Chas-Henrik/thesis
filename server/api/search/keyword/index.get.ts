@@ -79,7 +79,12 @@ export default defineEventHandler(async (event): Promise<SearchResponse> => {
         af_job_id: true,
       },
     })
-    console.log(`[search] Found ${results.length} results for query: "${trimmedQuery}"`)
+
+    // Log title of each search result
+    console.log(`KEYWORD SEARCH RESULTS:`)
+    results.forEach((result, index) => {
+      console.log(`${index + 1}: ${result.title}`)
+    })
     
     // Convert BigInt id to string for JSON serialization
     const serializedResults = results.map(job => ({

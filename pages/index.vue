@@ -41,7 +41,7 @@ const workingHoursTypes = computed<string[]>(() =>
   [...new Set(searchResultJobs.value.map(j => j.working_hours_type).filter((v): v is string => v !== null))]
 )
 
-const keywordSearchResults = computed<AdListItem[]>(() =>
+const filteredSearchResults = computed<AdListItem[]>(() =>
   searchResultJobs.value
     .filter((job) => {
       const matchesLocation = !filterValues.value.location || job.location === filterValues.value.location
@@ -63,19 +63,13 @@ const keywordSearchResults = computed<AdListItem[]>(() =>
 // Methods
 const handleFilterUpdate = (newValues: typeof filterValues.value): void => {
   filterValues.value = newValues
-  console.log('Filter Updated:')
-  console.log('Location:', newValues.location)
-  console.log('Employment Type:', newValues.employmentType)
-  console.log('Working Hours:', newValues.workingHours)
 }
 
 const handleKeywordSearch = (query: string, results: JobSearchResult[]): void => {
   searchResultJobs.value = results
-  console.log('Keyword search:', query)
-  console.log(`${results.length} matches:`, results)
 }
 
-const handleCvAnalysisResult = (result: unknown): void => {
+const handleSematicSearch = (result: unknown): void => {
   searchResultJobs.value = (result as JobSearchResult[])
 }
 
@@ -85,28 +79,27 @@ const handleCvAnalysisResult = (result: unknown): void => {
   <main class="min-h-screen bg-white text-slate-950">
     <div class="mx-auto w-full max-w-7xl px-6 py-10">
       <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-10">
-          <CvAnalysisForm @result="handleCvAnalysisResult" />
-
+        <CvAnalysisForm @result="handleSematicSearch" />
 
         <section class="space-y-6 mt-auto">
           <KeywordSearch @search="handleKeywordSearch" />
         </section>
 
-        <section class="space-y-6 mt-auto">
+        <section class="space-y-6">
           <DBForm />
         </section>
         
-          <FilterMenu
-            :model-value="filterValues"
-            :locations="locations"
-            :employment-types="employmentTypes"
-            :working-hours-types="workingHoursTypes"
-            @update:model-value="handleFilterUpdate"
-            class="col-span-1 md:col-span-2 lg:col-span-3"
-          />
+        <FilterMenu
+          :model-value="filterValues"
+          :locations="locations"
+          :employment-types="employmentTypes"
+          :working-hours-types="workingHoursTypes"
+          @update:model-value="handleFilterUpdate"
+          class="col-span-1 md:col-span-2 lg:col-span-3"
+        />
 
         <section class="md:col-span-2 lg:col-span-3">
-          <AdList :ads="keywordSearchResults" />
+          <AdList :ads="filteredSearchResults" />
         </section>
       </div>
 

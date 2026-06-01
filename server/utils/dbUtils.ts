@@ -149,21 +149,26 @@ export const cvDBCosineSimilaritySearch = async (
   return data as JobSearchResult[]
 }
 
+export const extractCVSkillsAndExperience = async (text: string): Promise<string> => {
+  // TODO: Extract CV skills and experience using Gemini
+  return text
+}
 
-export const createCVEmbedding = async (text: string, cvSearchOption: string | null) => {
-
+export const createEmbedding = async (text: string) => {
   const ai = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY
   }); 
 
-  if(cvSearchOption === 'Raw CV Info') {
-    const embeddingResponse = await ai.models.embedContent({
-    model: "gemini-embedding-001",
-      contents: text,
-      config: { outputDimensionality: 768 }
-    });
-    return embeddingResponse.embeddings?.[0]?.values ?? []
+  if (!text || text.trim().length === 0) {
+    console.error('Text content is required for embedding')
+    return []
   }
-  else return []
 
+  const embeddingResponse = await ai.models.embedContent({
+    model: "gemini-embedding-001",
+    contents: text.trim(),
+    config: { outputDimensionality: 768 }
+  })
+
+  return embeddingResponse.embeddings?.[0]?.values ?? []
 }

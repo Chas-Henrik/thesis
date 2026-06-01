@@ -2,10 +2,12 @@
 // Props & Emits
 interface Props {
   modelValue: File | null
+  disabled?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: null,
+  disabled: false,
 })
 
 const emit = defineEmits<{
@@ -17,14 +19,23 @@ const isDragOver = ref(false)
 const errorMessage = ref<string | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
+// Watchers
+watch(() => props.disabled, (newValue) => {
+  if (newValue && fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
+})
+
 // Methods
 function handleDrop(event: DragEvent) {
+  if (props.disabled) return
   isDragOver.value = false
   const file = event.dataTransfer?.files[0] ?? null
   setFile(file)
 }
 
 function handleFileInput(event: Event) {
+  if (props.disabled) return
   const file = (event.target as HTMLInputElement).files?.[0] ?? null
   setFile(file)
 }
@@ -47,6 +58,7 @@ function removeFile() {
 }
 
 function openFilePicker() {
+  if (props.disabled) return
   fileInputRef.value?.click()
 }
 </script>
@@ -56,14 +68,17 @@ function openFilePicker() {
     <!-- Drop zone (always visible) -->
     <div
       role="button"
-      tabindex="0"
+      :tabindex="disabled ? -1 : 0"
       :aria-label="isDragOver ? 'Release to upload PDF' : props.modelValue ? 'Drop to replace CV' : 'Drop your CV here or click to browse'"
-      class="flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-12 transition-colors"
-      :class="isDragOver
-        ? 'border-slate-500 bg-slate-50'
-        : 'border-slate-300 bg-white hover:border-slate-400 hover:bg-slate-50'"
-      @dragover.prevent="isDragOver = true"
-      @dragleave.prevent="isDragOver = false"
+      :aria-disabled="disabled"
+      class="flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-12 transition-colors"
+      :class="disabled
+        ? 'cursor-not-allowed border-slate-200 bg-slate-100'
+        : isDragOver
+          ? 'cursor-pointer border-slate-500 bg-slate-50'
+          : 'cursor-pointer border-slate-300 bg-white hover:border-slate-400 hover:bg-slate-50'"
+      @dragover.prevent="!disabled && (isDragOver = true)"
+      @dragleave.prevent="!disabled && (isDragOver = false)"
       @drop.prevent="handleDrop"
       @click="openFilePicker"
       @keydown.enter.prevent="openFilePicker"
@@ -71,7 +86,8 @@ function openFilePicker() {
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        class="h-10 w-10 text-slate-400"
+        class="h-10 w-10 transition-colors"
+        :class="disabled ? 'text-slate-300' : 'text-slate-400'"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -80,11 +96,11 @@ function openFilePicker() {
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
       <div>
-        <p class="text-sm font-medium text-slate-700">
-          <template v-if="props.modelValue">Drop to replace or <span class="text-slate-900 underline">browse</span></template>
-          <template v-else>Drop your CV here or <span class="text-slate-900 underline">browse</span></template>
+        <p class="text-sm font-medium transition-colors" :class="disabled ? 'text-slate-400' : 'text-slate-700'">
+          <template v-if="props.modelValue">Drop to replace or <span class="underline" :class="disabled ? 'text-slate-400' : 'text-slate-900'">browse</span></template>
+          <template v-else>Drop your CV here or <span class="underline" :class="disabled ? 'text-slate-400' : 'text-slate-900'">browse</span></template>
         </p>
-        <p class="mt-1 text-xs text-slate-400">PDF only</p>
+        <p class="mt-1 text-xs" :class="disabled ? 'text-slate-300' : 'text-slate-400'">PDF only</p>
       </div>
     </div>
 
@@ -109,7 +125,11 @@ function openFilePicker() {
       <button
         type="button"
         aria-label="Remove file"
-        class="ml-4 shrink-0 rounded p-1 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+        :disabled="disabled"
+        class="ml-4 shrink-0 rounded p-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+        :class="disabled
+          ? 'cursor-not-allowed text-slate-200'
+          : 'text-slate-400 hover:bg-slate-200 hover:text-slate-600'"
         @click="removeFile"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
