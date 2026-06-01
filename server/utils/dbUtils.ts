@@ -89,6 +89,7 @@ export const updateDB = async (mappedJobs: MappedJob[]): Promise<void> => {
 
 
     const newJobsWithEmbeddings = []
+    let jobCount = newJobsToInsert.length;
     for (const job of newJobsToInsert) {
       const extractJobInfo = await extractJobAdSkillsAndExperience(job.description)
 
@@ -109,6 +110,9 @@ export const updateDB = async (mappedJobs: MappedJob[]): Promise<void> => {
         extracted_experiences_skills_embedding: extractedEmbeddingResponse.embeddings?.[0]?.values ?? null,
         raw_description_embedding: rawEmbeddingResponse.embeddings?.[0]?.values ?? null
       })
+      jobCount--;
+      console.log(`[updateDB] Created embeddings for job ID ${job.af_job_id}. Remaining jobs: ${jobCount}`)
+
       await new Promise(resolve => setTimeout(resolve, EMBEDDING_TIMEOUT_MS))
     }
 
