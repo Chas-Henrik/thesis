@@ -10,6 +10,7 @@ import { cvDBCosineSimilaritySearch, createEmbedding, extractCVSkillsAndExperien
 export default defineEventHandler(async (event) => {
   const formData = await readFormData(event)
   const cvSearchOption = formData.get('cvSearchOption') as string | null
+  const adSearchOption = formData.get('adSearchOption') as string
   const file = formData.get('file')
   const freetextQuery = formData.get('freetextQuery') as string | null
   const topK = formData.get('topK') as string | null
@@ -40,7 +41,7 @@ export default defineEventHandler(async (event) => {
 
   const embedding = await createEmbedding(text)
   
-  const response = await cvDBCosineSimilaritySearch(embedding, topK ? parseInt(topK) : 10)
+  const response = await cvDBCosineSimilaritySearch(embedding, topK ? parseInt(topK) : 10, adSearchOption)
 
   // Log similarity and title of search results
   console.log(`SEMANTIC SEARCH RESULTS:`)
