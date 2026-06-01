@@ -73,7 +73,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <form @submit.prevent="handleSearch" class="w-full">
+  <form @submit.prevent="handleSearch" class="mt-auto w-full">
     <div class="flex items-center gap-2">
       <div class="relative flex-1">
         <input

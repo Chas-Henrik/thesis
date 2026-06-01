@@ -89,16 +89,30 @@ export const updateDB = async (mappedJobs: MappedJob[]): Promise<void> => {
 
 
     const newJobsWithEmbeddings = []
+    let jobCount = newJobsToInsert.length;
     for (const job of newJobsToInsert) {
-      const embeddingResponse = await ai.models.embedContent({
+      const extractJobInfo = await extractJobAdSkillsAndExperience(job.description)
+
+      const extractedEmbeddingResponse = await ai.models.embedContent({
+        model: "gemini-embedding-001",
+        contents: extractJobInfo,
+        config: { outputDimensionality: 768 }
+      });
+
+      const rawEmbeddingResponse = await ai.models.embedContent({
         model: "gemini-embedding-001",
         contents: `${job.title} ${job.description ?? ''}`.trim(),
         config: { outputDimensionality: 768 }
       });
+      
       newJobsWithEmbeddings.push({
         ...job,
-        raw_description_embedding: embeddingResponse.embeddings?.[0]?.values ?? null
+        extracted_experiences_skills_embedding: extractedEmbeddingResponse.embeddings?.[0]?.values ?? null,
+        raw_description_embedding: rawEmbeddingResponse.embeddings?.[0]?.values ?? null
       })
+      jobCount--;
+      console.log(`[updateDB] Created embeddings for job ID ${job.af_job_id}. Remaining jobs: ${jobCount}`)
+
       await new Promise(resolve => setTimeout(resolve, EMBEDDING_TIMEOUT_MS))
     }
 
@@ -134,24 +148,71 @@ export interface JobSearchResult {
 export const cvDBCosineSimilaritySearch = async (
   embedding: number[],
   topK: number = 5,
+  adSearchOption: string
 ): Promise<JobSearchResult[]> => {
   const supabase = getServerSupabaseClient()
+  const rpcName = adSearchOption === 'Extracted Ad' ? 'match_extracted_jobs_cosine' : 'match_raw_jobs_cosine'
 
-  const { data, error } = await supabase.rpc('match_jobs_cosine', {
+  const { data, error } = await supabase.rpc(rpcName, {
     query_embedding: embedding,
     match_count: topK,
   })
-
   if (error) {
     throw new Error(`Cosine similarity search failed: ${error.message}`)
   }
-
   return data as JobSearchResult[]
+
 }
 
 export const extractCVSkillsAndExperience = async (text: string): Promise<string> => {
-  // TODO: Extract CV skills and experience using Gemini
-  return text
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+
+  const prompt = `You are a CV parser. Extract only the skills and work experience from the following CV text. 
+  Return a clean, concise summary containing:
+  - A "Skills" section listing technical and soft skills
+  - An "Experience" section listing job titles, employers, durations, and key responsibilities
+
+  Remove all formatting noise, personal contact details, education details, hobbies, and unrelated content.
+  Keep the output as plain text.
+
+  CV text:
+  ${text}`
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3.1-flash-lite',
+    contents: prompt,
+    config: {temperature: 0 },
+  })
+  console.log(response.text)
+  return response.text ?? ''
+}
+
+
+export const extractJobAdSkillsAndExperience = async (text: string | null): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+
+  if (!text || text.trim().length === 0) {
+    console.error('Job description text is required for extraction')
+    return ''
+  }
+
+  const prompt = `You are a job advertisement parser. Extract only the required and preferred qualifications from the following job ad.
+    Return a clean, concise summary containing:
+    - A "Required Skills" section listing the technical and soft skills the employer is looking for
+    - A "Required Experience" section listing the experience, background, or seniority level the employer expects
+
+    Ignore company descriptions, benefits, salary, application instructions, legal disclaimers, and unrelated content.
+    Keep the output as plain text.
+
+    Job ad text:
+    ${text}`
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3.1-flash-lite',
+    contents: prompt,
+    config: {temperature: 0 },
+  })
+  return response.text ?? ''
 }
 
 export const createEmbedding = async (text: string) => {
