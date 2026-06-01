@@ -4,6 +4,38 @@ import { GoogleGenAI } from "@google/genai";
 import { EMBEDDING_TIMEOUT_MS } from '~/constants/jobSearch'
 
 /**
+ * Creates an embedding with exponential backoff retry logic for transient errors.
+ * Handles 503 Service Unavailable errors gracefully.
+ */
+const createEmbeddingWithRetry = async (
+  ai: GoogleGenAI,
+  text: string,
+  maxRetries: number = 3
+): Promise<any> => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await ai.models.embedContent({
+        model: "gemini-embedding-2",
+        contents: text.trim(),
+        config: { outputDimensionality: 768 }
+      })
+    } catch (error: any) {
+      const isServiceUnavailable = error?.code === 503 || error?.status === 'UNAVAILABLE'
+      const isLastAttempt = attempt === maxRetries - 1
+
+      if (isServiceUnavailable && !isLastAttempt) {
+        const backoffMs = Math.pow(2, attempt) * 1000 + Math.random() * 1000 // 1-2s, 2-3s, 4-5s
+        console.warn(`[Embedding Retry] Attempt ${attempt + 1}/${maxRetries} failed with 503. Retrying in ${backoffMs.toFixed(0)}ms...`)
+        await new Promise(resolve => setTimeout(resolve, backoffMs))
+      } else {
+        console.error(`[Embedding Error] Attempt ${attempt + 1}/${maxRetries} failed:`, error?.message)
+        throw error
+      }
+    }
+  }
+}
+
+/**
  * Fetches all af_job_id values from the jobs table in Supabase.
  * Handles pagination to retrieve all results (default limit is 1000).
  * Returns an array of strings representing existing job IDs in the database.
@@ -91,27 +123,26 @@ export const updateDB = async (mappedJobs: MappedJob[]): Promise<void> => {
     const newJobsWithEmbeddings = []
     let jobCount = newJobsToInsert.length;
     for (const job of newJobsToInsert) {
-      const extractJobInfo = await extractJobAdSkillsAndExperience(job.description)
+      try {
+        const extractJobInfo = await extractJobAdSkillsAndExperience(job.description)
 
-      const extractedEmbeddingResponse = await ai.models.embedContent({
-        model: "gemini-embedding-001",
-        contents: extractJobInfo,
-        config: { outputDimensionality: 768 }
-      });
-
-      const rawEmbeddingResponse = await ai.models.embedContent({
-        model: "gemini-embedding-001",
-        contents: `${job.title} ${job.description ?? ''}`.trim(),
-        config: { outputDimensionality: 768 }
-      });
-      
-      newJobsWithEmbeddings.push({
-        ...job,
-        extracted_experiences_skills_embedding: extractedEmbeddingResponse.embeddings?.[0]?.values ?? null,
-        raw_description_embedding: rawEmbeddingResponse.embeddings?.[0]?.values ?? null
-      })
-      jobCount--;
-      console.log(`[updateDB] Created embeddings for job ID ${job.af_job_id}. Remaining jobs: ${jobCount}`)
+        const extractedEmbeddingResponse = await createEmbeddingWithRetry(ai, extractJobInfo)
+        const rawEmbeddingResponse = await createEmbeddingWithRetry(
+          ai,
+          `${job.title} ${job.description ?? ''}`.trim()
+        );
+        
+        newJobsWithEmbeddings.push({
+          ...job,
+          extracted_experiences_skills_embedding: extractedEmbeddingResponse.embeddings?.[0]?.values ?? null,
+          raw_description_embedding: rawEmbeddingResponse.embeddings?.[0]?.values ?? null
+        })
+        jobCount--;
+        console.log(`[updateDB] Created embeddings for job ID ${job.af_job_id}. Remaining jobs: ${jobCount}`)
+      } catch (error: any) {
+        console.error(`[updateDB] Failed to create embeddings for job ID ${job.af_job_id}:`, error?.message)
+        throw error
+      }
 
       await new Promise(resolve => setTimeout(resolve, EMBEDDING_TIMEOUT_MS))
     }
@@ -225,11 +256,11 @@ export const createEmbedding = async (text: string) => {
     return []
   }
 
-  const embeddingResponse = await ai.models.embedContent({
-    model: "gemini-embedding-001",
-    contents: text.trim(),
-    config: { outputDimensionality: 768 }
-  })
-
-  return embeddingResponse.embeddings?.[0]?.values ?? []
+  try {
+    const embeddingResponse = await createEmbeddingWithRetry(ai, text)
+    return embeddingResponse.embeddings?.[0]?.values ?? []
+  } catch (error: any) {
+    console.error('Failed to create embedding after retries:', error?.message)
+    throw error
+  }
 }
