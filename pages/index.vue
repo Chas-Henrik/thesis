@@ -83,9 +83,9 @@ const handleSematicSearch = (result: unknown): void => {
           <h1 class="text-lg pl-2 font-semibold mb-4">Semantic Search</h1>
           <CvAnalysisForm @result="handleSematicSearch" />
         </section>
-        <section class="space-y-6 flex">
+        <section class="flex flex-col">
           <h1 class="text-lg font-semibold ml-2">Keyword Search</h1>
-          <KeywordSearch class="mt-auto" @search="handleKeywordSearch" />
+          <KeywordSearch @search="handleKeywordSearch" />
         </section>
 
         <section class="space-y-6">
