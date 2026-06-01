@@ -2,6 +2,74 @@ import { getServerSupabaseClient } from './supabase'
 import type { MappedJob } from '~/server/utils/jobSearch'
 import { GoogleGenAI } from "@google/genai";
 import { EMBEDDING_TIMEOUT_MS } from '~/constants/jobSearch'
+import * as fs from 'fs'
+import * as path from 'path'
+
+/**
+ * Creates an embedding with exponential backoff retry logic for transient errors.
+ * Handles 503 Service Unavailable errors gracefully.
+ */
+const createEmbeddingWithRetry = async (
+  ai: GoogleGenAI,
+  text: string,
+  maxRetries: number = 3
+): Promise<any> => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await ai.models.embedContent({
+        model: "gemini-embedding-2",
+        contents: text.trim(),
+        config: { outputDimensionality: 768 }
+      })
+    } catch (error: any) {
+      const isServiceUnavailable = error?.code === 503 || error?.status === 'UNAVAILABLE'
+      const isLastAttempt = attempt === maxRetries - 1
+
+      if (isServiceUnavailable && !isLastAttempt) {
+        const backoffMs = Math.pow(2, attempt) * 1000 + Math.random() * 1000 // 1-2s, 2-3s, 4-5s
+        console.warn(`[Embedding Retry] Attempt ${attempt + 1}/${maxRetries} failed with 503. Retrying in ${backoffMs.toFixed(0)}ms...`)
+        await new Promise(resolve => setTimeout(resolve, backoffMs))
+      } else {
+        console.error(`[Embedding Error] Attempt ${attempt + 1}/${maxRetries} failed:`, error?.message)
+        throw error
+      }
+    }
+  }
+}
+
+/**
+ * Logs job description and extracted info to a file for debugging/analysis.
+ */
+const logJobExtractionToFile = (jobId: string, jobTitle: string, description: string, extractedInfo: string): void => {
+  try {
+    const logsDir = path.join(process.cwd(), 'server', 'logs')
+    if (!fs.existsSync(logsDir)) {
+      fs.mkdirSync(logsDir, { recursive: true })
+    }
+
+    const filename = path.join(logsDir, 'job-extraction.log')
+    
+    const logEntry = `
+================================================================================
+Job ID: ${jobId}
+Job Title: ${jobTitle}
+Timestamp: ${new Date().toISOString()}
+================================================================================
+
+--- RAW DESCRIPTION ---
+${description}
+
+--- EXTRACTED INFO ---
+${extractedInfo}
+
+================================================================================
+`
+
+    fs.appendFileSync(filename, logEntry, 'utf-8')
+  } catch (error) {
+    console.error('[Log Error] Failed to write extraction log:', error)
+  }
+}
 
 /**
  * Fetches all af_job_id values from the jobs table in Supabase.
@@ -91,27 +159,29 @@ export const updateDB = async (mappedJobs: MappedJob[]): Promise<void> => {
     const newJobsWithEmbeddings = []
     let jobCount = newJobsToInsert.length;
     for (const job of newJobsToInsert) {
-      const extractJobInfo = await extractJobAdSkillsAndExperience(job.description)
+      try {
+        const extractJobInfo = await extractJobAdSkillsAndExperience(job.description)
+        
+        // Log raw description and extracted info to file
+        logJobExtractionToFile(job.af_job_id, job.title, job.description ?? '', extractJobInfo)
 
-      const extractedEmbeddingResponse = await ai.models.embedContent({
-        model: "gemini-embedding-001",
-        contents: extractJobInfo,
-        config: { outputDimensionality: 768 }
-      });
-
-      const rawEmbeddingResponse = await ai.models.embedContent({
-        model: "gemini-embedding-001",
-        contents: `${job.title} ${job.description ?? ''}`.trim(),
-        config: { outputDimensionality: 768 }
-      });
-      
-      newJobsWithEmbeddings.push({
-        ...job,
-        extracted_experiences_skills_embedding: extractedEmbeddingResponse.embeddings?.[0]?.values ?? null,
-        raw_description_embedding: rawEmbeddingResponse.embeddings?.[0]?.values ?? null
-      })
-      jobCount--;
-      console.log(`[updateDB] Created embeddings for job ID ${job.af_job_id}. Remaining jobs: ${jobCount}`)
+        const extractedEmbeddingResponse = await createEmbeddingWithRetry(ai, extractJobInfo)
+        const rawEmbeddingResponse = await createEmbeddingWithRetry(
+          ai,
+          `${job.title} ${job.description ?? ''}`.trim()
+        );
+        
+        newJobsWithEmbeddings.push({
+          ...job,
+          extracted_experiences_skills_embedding: extractedEmbeddingResponse.embeddings?.[0]?.values ?? null,
+          raw_description_embedding: rawEmbeddingResponse.embeddings?.[0]?.values ?? null
+        })
+        jobCount--;
+        console.log(`[updateDB] Created embeddings for job ID ${job.af_job_id}. Remaining jobs: ${jobCount}`)
+      } catch (error: any) {
+        console.error(`[updateDB] Failed to create embeddings for job ID ${job.af_job_id}:`, error?.message)
+        throw error
+      }
 
       await new Promise(resolve => setTimeout(resolve, EMBEDDING_TIMEOUT_MS))
     }
@@ -198,6 +268,7 @@ export const extractJobAdSkillsAndExperience = async (text: string | null): Prom
 
   const prompt = `You are a job advertisement parser. Extract only the required and preferred qualifications from the following job ad.
     Return a clean, concise summary containing:
+    - A "Job Summary" section with a brief 2-3 sentence description of the main role and responsibilities
     - A "Required Skills" section listing the technical and soft skills the employer is looking for
     - A "Required Experience" section listing the experience, background, or seniority level the employer expects
 
@@ -225,11 +296,11 @@ export const createEmbedding = async (text: string) => {
     return []
   }
 
-  const embeddingResponse = await ai.models.embedContent({
-    model: "gemini-embedding-001",
-    contents: text.trim(),
-    config: { outputDimensionality: 768 }
-  })
-
-  return embeddingResponse.embeddings?.[0]?.values ?? []
+  try {
+    const embeddingResponse = await createEmbeddingWithRetry(ai, text)
+    return embeddingResponse.embeddings?.[0]?.values ?? []
+  } catch (error: any) {
+    console.error('Failed to create embedding after retries:', error?.message)
+    throw error
+  }
 }
