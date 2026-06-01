@@ -40,19 +40,19 @@ const createEmbeddingWithRetry = async (
 /**
  * Logs job description and extracted info to a file for debugging/analysis.
  */
-const logJobExtractionToFile = (jobId: string, description: string, extractedInfo: string): void => {
+const logJobExtractionToFile = (jobId: string, jobTitle: string, description: string, extractedInfo: string): void => {
   try {
     const logsDir = path.join(process.cwd(), 'server', 'logs')
     if (!fs.existsSync(logsDir)) {
       fs.mkdirSync(logsDir, { recursive: true })
     }
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-    const filename = path.join(logsDir, `job-extraction-${timestamp}.log`)
+    const filename = path.join(logsDir, 'job-extraction.log')
     
     const logEntry = `
 ================================================================================
 Job ID: ${jobId}
+Job Title: ${jobTitle}
 Timestamp: ${new Date().toISOString()}
 ================================================================================
 
@@ -66,7 +66,6 @@ ${extractedInfo}
 `
 
     fs.appendFileSync(filename, logEntry, 'utf-8')
-    console.log(`[Log] Job extraction logged to ${filename}`)
   } catch (error) {
     console.error('[Log Error] Failed to write extraction log:', error)
   }
@@ -164,7 +163,7 @@ export const updateDB = async (mappedJobs: MappedJob[]): Promise<void> => {
         const extractJobInfo = await extractJobAdSkillsAndExperience(job.description)
         
         // Log raw description and extracted info to file
-        logJobExtractionToFile(job.af_job_id, job.description ?? '', extractJobInfo)
+        logJobExtractionToFile(job.af_job_id, job.title, job.description ?? '', extractJobInfo)
 
         const extractedEmbeddingResponse = await createEmbeddingWithRetry(ai, extractJobInfo)
         const rawEmbeddingResponse = await createEmbeddingWithRetry(
@@ -269,6 +268,7 @@ export const extractJobAdSkillsAndExperience = async (text: string | null): Prom
 
   const prompt = `You are a job advertisement parser. Extract only the required and preferred qualifications from the following job ad.
     Return a clean, concise summary containing:
+    - A "Job Summary" section with a brief 2-3 sentence description of the main role and responsibilities
     - A "Required Skills" section listing the technical and soft skills the employer is looking for
     - A "Required Experience" section listing the experience, background, or seniority level the employer expects
 
