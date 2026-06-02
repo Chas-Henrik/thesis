@@ -2,8 +2,6 @@ import { getServerSupabaseClient } from './supabase'
 import type { MappedJob } from '~/server/utils/jobSearch'
 import { GoogleGenAI } from "@google/genai";
 import { EMBEDDING_TIMEOUT_MS } from '~/constants/jobSearch'
-import * as fs from 'fs'
-import * as path from 'path'
 
 /**
  * Creates an embedding with exponential backoff retry logic for transient errors.
@@ -12,7 +10,7 @@ import * as path from 'path'
 const createEmbeddingWithRetry = async (
   ai: GoogleGenAI,
   text: string,
-  maxRetries: number = 3
+  maxRetries: number = 10
 ): Promise<any> => {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -22,52 +20,22 @@ const createEmbeddingWithRetry = async (
         config: { outputDimensionality: 768 }
       })
     } catch (error: any) {
-      const isServiceUnavailable = error?.code === 503 || error?.status === 'UNAVAILABLE'
+      // Handle nested error structure: {"error": {"code": 503, "status": "UNAVAILABLE"}}
+      const errorCode = error?.error?.code ?? error?.code
+      const errorStatus = error?.error?.status ?? error?.status
+      const isServiceUnavailable = errorCode === 503 || errorStatus === 'UNAVAILABLE'
       const isLastAttempt = attempt === maxRetries - 1
 
       if (isServiceUnavailable && !isLastAttempt) {
-        const backoffMs = Math.pow(2, attempt) * 1000 + Math.random() * 1000 // 1-2s, 2-3s, 4-5s
+        const backoffMs = 30000 // 30 seconds
         console.warn(`[Embedding Retry] Attempt ${attempt + 1}/${maxRetries} failed with 503. Retrying in ${backoffMs.toFixed(0)}ms...`)
         await new Promise(resolve => setTimeout(resolve, backoffMs))
       } else {
-        console.error(`[Embedding Error] Attempt ${attempt + 1}/${maxRetries} failed:`, error?.message)
+        const errorMsg = error?.error?.message ?? error?.message ?? String(error)
+        console.error(`[Embedding Error] Attempt ${attempt + 1}/${maxRetries} failed:`, errorMsg)
         throw error
       }
     }
-  }
-}
-
-/**
- * Logs job description and extracted info to a file for debugging/analysis.
- */
-const logJobExtractionToFile = (jobId: string, jobTitle: string, description: string, extractedInfo: string): void => {
-  try {
-    const logsDir = path.join(process.cwd(), 'server', 'logs')
-    if (!fs.existsSync(logsDir)) {
-      fs.mkdirSync(logsDir, { recursive: true })
-    }
-
-    const filename = path.join(logsDir, 'job-extraction.log')
-    
-    const logEntry = `
-================================================================================
-Job ID: ${jobId}
-Job Title: ${jobTitle}
-Timestamp: ${new Date().toISOString()}
-================================================================================
-
---- RAW DESCRIPTION ---
-${description}
-
---- EXTRACTED INFO ---
-${extractedInfo}
-
-================================================================================
-`
-
-    fs.appendFileSync(filename, logEntry, 'utf-8')
-  } catch (error) {
-    console.error('[Log Error] Failed to write extraction log:', error)
   }
 }
 
@@ -161,10 +129,6 @@ export const updateDB = async (mappedJobs: MappedJob[]): Promise<void> => {
     for (const job of newJobsToInsert) {
       try {
         const extractJobInfo = await extractJobAdSkillsAndExperience(job.description)
-        
-        // Log raw description and extracted info to file
-        logJobExtractionToFile(job.af_job_id, job.title, job.description ?? '', extractJobInfo)
-
         const extractedEmbeddingResponse = await createEmbeddingWithRetry(ai, extractJobInfo)
         const rawEmbeddingResponse = await createEmbeddingWithRetry(
           ai,
@@ -173,6 +137,7 @@ export const updateDB = async (mappedJobs: MappedJob[]): Promise<void> => {
         
         newJobsWithEmbeddings.push({
           ...job,
+          extracted_experiences_skills: extractJobInfo,
           extracted_experiences_skills_embedding: extractedEmbeddingResponse.embeddings?.[0]?.values ?? null,
           raw_description_embedding: rawEmbeddingResponse.embeddings?.[0]?.values ?? null
         })
