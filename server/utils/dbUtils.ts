@@ -20,7 +20,10 @@ const createEmbeddingWithRetry = async (
         config: { outputDimensionality: 768 }
       })
     } catch (error: any) {
-      const isServiceUnavailable = error?.code === 503 || error?.status === 'UNAVAILABLE'
+      // Handle nested error structure: {"error": {"code": 503, "status": "UNAVAILABLE"}}
+      const errorCode = error?.error?.code ?? error?.code
+      const errorStatus = error?.error?.status ?? error?.status
+      const isServiceUnavailable = errorCode === 503 || errorStatus === 'UNAVAILABLE'
       const isLastAttempt = attempt === maxRetries - 1
 
       if (isServiceUnavailable && !isLastAttempt) {
@@ -28,7 +31,8 @@ const createEmbeddingWithRetry = async (
         console.warn(`[Embedding Retry] Attempt ${attempt + 1}/${maxRetries} failed with 503. Retrying in ${backoffMs.toFixed(0)}ms...`)
         await new Promise(resolve => setTimeout(resolve, backoffMs))
       } else {
-        console.error(`[Embedding Error] Attempt ${attempt + 1}/${maxRetries} failed:`, error?.message)
+        const errorMsg = error?.error?.message ?? error?.message ?? String(error)
+        console.error(`[Embedding Error] Attempt ${attempt + 1}/${maxRetries} failed:`, errorMsg)
         throw error
       }
     }
