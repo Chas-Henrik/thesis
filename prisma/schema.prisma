@@ -19,6 +19,7 @@ model jobs {
   location                               String?
   date                                   String?
   description                            String
+  extracted_experiences_skills           String?
   job_link                               String?
   employer_name                          String?
   employment_type                        String?
