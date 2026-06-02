@@ -12,7 +12,7 @@ import * as path from 'path'
 const createEmbeddingWithRetry = async (
   ai: GoogleGenAI,
   text: string,
-  maxRetries: number = 3
+  maxRetries: number = 10
 ): Promise<any> => {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -26,7 +26,7 @@ const createEmbeddingWithRetry = async (
       const isLastAttempt = attempt === maxRetries - 1
 
       if (isServiceUnavailable && !isLastAttempt) {
-        const backoffMs = Math.pow(2, attempt) * 1000 + Math.random() * 1000 // 1-2s, 2-3s, 4-5s
+        const backoffMs = 30000 // 30 seconds
         console.warn(`[Embedding Retry] Attempt ${attempt + 1}/${maxRetries} failed with 503. Retrying in ${backoffMs.toFixed(0)}ms...`)
         await new Promise(resolve => setTimeout(resolve, backoffMs))
       } else {
