@@ -30,7 +30,7 @@ watch(() => props.ads, () => {
 // Computed
 const selectedAd = computed<AdListItem | null>(() => props.ads[selectedIndex.value] ?? null)
 const hasAds = computed<boolean>(() => props.ads.length > 0)
-const selectedAdDate = computed<string>(() => selectedAd.value?.date.split('T')[0] ?? '')
+const selectedAdDate = computed<string>(() => selectedAd.value?.date.replace('T', ' ') ?? '')
 
 // Methods
 const handleSelectAd = (index: number): void => {
