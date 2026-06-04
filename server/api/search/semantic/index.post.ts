@@ -4,7 +4,7 @@
  */
 
 import { extractTextFromPdf } from '~/server/utils/pdfParser'
-import { cvDBCosineSimilaritySearch, createEmbedding, extractCVSkillsAndExperience } from '~/server/utils/dbUtils'
+import { dBCosineSimilaritySearch, createEmbedding, extractCVSkillsAndExperience } from '~/server/utils/dbUtils'
 
 
 export default defineEventHandler(async (event) => {
@@ -41,12 +41,12 @@ export default defineEventHandler(async (event) => {
 
   const embedding = await createEmbedding(text)
   
-  const response = await cvDBCosineSimilaritySearch(embedding, topK ? parseInt(topK) : 10, adSearchOption)
+  const response = await dBCosineSimilaritySearch(embedding, topK ? parseInt(topK) : 10, adSearchOption)
 
   // Log similarity and title of search results
   console.log(`SEMANTIC SEARCH RESULTS:`)
   response.forEach((result, index) => {
-    console.log(`${index + 1}: Similarity=${result.similarity}, Title=${result.title}`)
+    console.log(`${index + 1}: Similarity=${result.similarity}, Date=${result.date}, Title=${result.title}`)
   })
 
   return { success: true, data: response }

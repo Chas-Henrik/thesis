@@ -83,7 +83,7 @@ export default defineEventHandler(async (event): Promise<SearchResponse> => {
     // Log title of each search result
     console.log(`KEYWORD SEARCH RESULTS:`)
     results.forEach((result, index) => {
-      console.log(`${index + 1}: ${result.title}`)
+      console.log(`${index + 1}: Date=${result.date}, Title=${result.title}`)
     })
     
     // Convert BigInt id to string for JSON serialization

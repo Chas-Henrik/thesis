@@ -180,7 +180,7 @@ export interface JobSearchResult {
   similarity: number
 }
 
-export const cvDBCosineSimilaritySearch = async (
+export const dBCosineSimilaritySearch = async (
   embedding: number[],
   topK: number = 5,
   adSearchOption: string
